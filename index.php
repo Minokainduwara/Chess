@@ -34,6 +34,10 @@ if ($pdo) {
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" type="image/png" href="favicon.png">
     <link rel="shortcut icon" href="favicon.ico">
+    
+    <!-- Particles.js Library for floating chess pieces -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
     <style>
         /* ── Font Loading ── */
         @font-face {
@@ -93,7 +97,59 @@ if ($pdo) {
             font-weight: 400;
             line-height: 1.6;
             color: var(--ink);
-            background: var(--cream);
+            background: linear-gradient(135deg, var(--cream) 0%, #f0e8d8 100%);
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* Chess board background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(245, 240, 224, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(245, 240, 224, 0.1) 1px, transparent 1px);
+            background-size: 100px 100px;
+            pointer-events: none;
+            z-index: -2;
+        }
+        
+        /* Particles Container */
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        /* Floating Chess Pieces */
+        .floating-pieces {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+        
+        .floating-piece {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: pieceFloat 6s ease-in-out infinite;
+            color: var(--ink);
+        }
+        
+        @keyframes pieceFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(10deg); }
         }
 
         /* ── Scrollbar theming ── */
@@ -990,6 +1046,157 @@ if ($pdo) {
             text-align: right;
         }
 
+        /* GTOUCH ANIMATIONS - Custom Touch/Gesture Effects */
+        .gtouch-hover { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .gtouch-hover:hover { transform: scale(1.02); }
+        .gtouch-press:active { transform: scale(0.98); }
+        .gtouch-tap { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .gtouch-tap:active { transform: scale(0.95); opacity: 0.9; }
+        .gtouch-ripple { position: relative; overflow: hidden; }
+        .gtouch-ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+        .gtouch-ripple:active::after { width: 300%; height: 300%; }
+        .chess-piece-drag { cursor: grab; transition: all 0.2s ease; }
+        .chess-piece-drag:active { cursor: grabbing; transform: scale(1.05); z-index: 1000; }
+        
+        /* Enhanced animations */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } 60% { transform: translateY(-3px); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        
+        /* Enhanced header with scroll effect */
+        .site-header.scrolled {
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            background: rgba(245, 240, 224, 0.98);
+        }
+        
+        /* Enhanced hero section */
+        .hero {
+            padding: 6rem 0 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(192, 57, 43, 0.05) 100%);
+            pointer-events: none;
+        }
+        .hero-copy { animation: fadeInUp 0.8s ease-out; }
+        .hero-eval { animation: slideIn 0.6s ease-out 0.2s both; }
+        .hero-eval-symbol { animation: bounce 2s infinite; }
+        .hero-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: var(--red);
+            border-radius: 2px;
+        }
+        .hero-subtitle { animation: fadeIn 1s ease-out 0.4s both; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Enhanced CTA button */
+        .hero-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        .hero-cta:hover::before { left: 100%; }
+        
+        /* Enhanced chess diagram */
+        .chess-diagram {
+            border: 3px solid var(--ink);
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        .chess-diagram:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Enhanced table and interactive elements */
+        .round-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .round-item:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: translateX(5px);
+        }
+        .round-item:hover .round-number {
+            color: var(--red);
+            transform: scale(1.1);
+        }
+        .round-status--active { animation: pulse 2s infinite; }
+        
+        .standings-table-wrap:hover { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); }
+        .standings-table tbody tr:hover td { transform: scale(1.01); }
+        
+        .rule-entry {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .rule-entry:hover { transform: translateX(5px); }
+        .rule-entry:hover .rule-move { transform: scale(1.1); }
+        .rule-entry:hover .rule-text { color: var(--ink); }
+        
+        .member-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+        .input-field:focus { transform: translateY(-2px); }
+        .btn-remove-member:hover { background: rgba(192, 57, 43, 0.1); transform: scale(1.05); }
+        
+        .compliance-pill {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .compliance-pill:hover { transform: scale(1.05); }
+        
+        .footer-cta:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(192, 57, 43, 0.3); }
+        
+        /* Loading spinner for forms */
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        /* Responsive - hide floating pieces on mobile */
+        @media (max-width: 768px) {
+            .floating-pieces { display: none; }
+        }
+        
         /* ── Entrance animation ── */
         @media (prefers-reduced-motion: no-preference) {
             .reveal {
@@ -1073,30 +1280,42 @@ if ($pdo) {
     </style>
 </head>
 <body>
+    <!-- Particles Container -->
+    <div id="particles-js"></div>
+
+    <!-- Floating Chess Pieces -->
+    <div class="floating-pieces">
+        <span class="floating-piece" style="top: 10%; left: 10%; animation-delay: 0s;">♙</span>
+        <span class="floating-piece" style="top: 20%; left: 80%; animation-delay: 0.5s;">♟</span>
+        <span class="floating-piece" style="top: 60%; left: 15%; animation-delay: 1s;">♖</span>
+        <span class="floating-piece" style="top: 70%; left: 75%; animation-delay: 1.5s;">♕</span>
+        <span class="floating-piece" style="top: 40%; left: 50%; animation-delay: 2s;">♘</span>
+        <span class="floating-piece" style="top: 30%; left: 30%; animation-delay: 2.5s;">♗</span>
+    </div>
 
     <!-- ═══ HEADER ═══ -->
-    <header class="site-header">
+    <header class="site-header" id="siteHeader">
         <div class="page-rail header-inner">
-            <a href="#" class="header-brand" aria-label="University of Ruhuna, Faculty of Technology">
+            <a href="#" class="header-brand gtouch-ripple" aria-label="University of Ruhuna, Faculty of Technology">
                 <div class="header-brand-text">
                     University of Ruhuna
                     <span>Faculty of Technology</span>
                 </div>
             </a>
             <nav class="header-nav" aria-label="Main navigation">
-                <a href="#details">About</a>
+                <a href="#details" class="gtouch-hover">About</a>
                 <span class="header-nav-sep" aria-hidden="true">·</span>
-                <a href="#schedule">Schedule</a>
+                <a href="#schedule" class="gtouch-hover">Schedule</a>
                 <?php if ($scoreboard_visible): ?>
                 <span class="header-nav-sep" aria-hidden="true">·</span>
-                <a href="#standings">Standings</a>
+                <a href="#standings" class="gtouch-hover">Standings</a>
                 <?php endif; ?>
                 <span class="header-nav-sep" aria-hidden="true">·</span>
-                <a href="#rules">Rules</a>
+                <a href="#rules" class="gtouch-hover">Rules</a>
                 <span class="header-nav-sep" aria-hidden="true">·</span>
-                <a href="#register">Register</a>
+                <a href="#register" class="gtouch-hover">Register</a>
                 <span class="header-nav-sep" aria-hidden="true">·</span>
-                <a href="admin.php" style="color: var(--red); font-weight: 600;">Admin</a>
+                <a href="admin.php" style="color: var(--red); font-weight: 600;" class="gtouch-hover">Admin</a>
             </nav>
         </div>
     </header>
@@ -1111,14 +1330,14 @@ if ($pdo) {
                     2026
                 </h1>
                 <p class="hero-subtitle">University of Ruhuna</p>
-                <a href="#register" class="hero-cta">
+                <a href="#register" class="hero-cta gtouch-ripple gtouch-long-press">
                     Register Now
                     <span class="hero-cta-arrow" aria-hidden="true">→</span>
                     <span class="hero-cta-notation" aria-hidden="true">1.e4</span>
                 </a>
             </div>
             <div class="hero-board">
-                <div class="chess-diagram" role="img" aria-label="Chess diagram showing a Sicilian Defense position">
+                <div class="chess-diagram gtouch-hover" role="img" aria-label="Chess diagram showing a Sicilian Defense position">
                     <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
                         <!-- Board squares -->
                         <?php
@@ -1158,7 +1377,7 @@ if ($pdo) {
                             $x = $col * 50 + 25;
                             $y = $row * 50 + 35;
                             $color = in_array($piece, ['♜','♞','♝','♛','♚','♟']) ? '#1A1A1A' : '#5A5045';
-                            echo "<text x=\"$x\" y=\"$y\" text-anchor=\"middle\" font-size=\"36\" fill=\"$color\" font-family=\"serif\">$piece</text>\n";
+                            echo "<text x=\"$x\" y=\"$y\" text-anchor=\"middle\" font-size=\"36\" fill=\"$color\" font-family=\"serif\" class=\"chess-piece-drag\">$piece</text>\n";
                         }
                         ?>
                         <!-- File labels -->
@@ -1187,28 +1406,28 @@ if ($pdo) {
             <span aria-hidden="true">□</span> Event Details
         </h2>
         <div class="details-grid">
-            <div class="detail-item">
+            <div class="detail-item gtouch-swipe">
                 <span class="detail-symbol" aria-hidden="true">♔</span>
                 <div>
                     <div class="detail-label">Date</div>
                     <div class="detail-value">10th October 2026</div>
                 </div>
             </div>
-            <div class="detail-item">
+            <div class="detail-item gtouch-swipe">
                 <span class="detail-symbol" aria-hidden="true">♕</span>
                 <div>
                     <div class="detail-label">Venue</div>
                     <div class="detail-value">Faculty of Technology Canteen,<br>University of Ruhuna, Kamburupitiya</div>
                 </div>
             </div>
-            <div class="detail-item">
+            <div class="detail-item gtouch-swipe">
                 <span class="detail-symbol" aria-hidden="true">±</span>
                 <div>
                     <div class="detail-label">Format</div>
                     <div class="detail-value">Round-Robin (Every team plays against all other teams)<br>Time control: 25+5 (rapid)</div>
                 </div>
             </div>
-            <div class="detail-item">
+            <div class="detail-item gtouch-swipe">
                 <span class="detail-symbol" aria-hidden="true">⩲</span>
                 <div>
                     <div class="detail-label">Eligibility</div>
@@ -1226,31 +1445,31 @@ if ($pdo) {
             <span aria-hidden="true">⌖</span> Round Schedule
         </h2>
         <ol class="round-list">
-            <li class="round-item">
+            <li class="round-item gtouch-tap">
                 <span class="round-number">1.</span>
                 <span class="round-date">10 Oct 2026</span>
                 <span class="round-time">09:00 – 10:30</span>
                 <span class="round-status round-status--active">Registration Open</span>
             </li>
-            <li class="round-item">
+            <li class="round-item gtouch-tap">
                 <span class="round-number">2.</span>
                 <span class="round-date">10 Oct 2026</span>
                 <span class="round-time">10:45 – 12:15</span>
                 <span class="round-status round-status--active">Registration Open</span>
             </li>
-            <li class="round-item">
+            <li class="round-item gtouch-tap">
                 <span class="round-number">3.</span>
                 <span class="round-date">10 Oct 2026</span>
                 <span class="round-time">13:00 – 14:30</span>
                 <span class="round-status round-status--active">Registration Open</span>
             </li>
-            <li class="round-item">
+            <li class="round-item gtouch-tap">
                 <span class="round-number">4.</span>
                 <span class="round-date">10 Oct 2026</span>
                 <span class="round-time">14:45 – 16:15</span>
                 <span class="round-status round-status--active">Registration Open</span>
             </li>
-            <li class="round-item">
+            <li class="round-item gtouch-tap">
                 <span class="round-number">5.</span>
                 <span class="round-date">10 Oct 2026</span>
                 <span class="round-time">16:30 – 18:00</span>
@@ -1269,13 +1488,13 @@ if ($pdo) {
                 <span aria-hidden="true">♛</span> Championship Standings
             </h2>
             <?php if (!empty($scoreboard_status)): ?>
-                <span class="standings-status-badge">
+                <span class="standings-status-badge gtouch-hover">
                     ● <?= htmlspecialchars($scoreboard_status) ?>
                 </span>
             <?php endif; ?>
         </div>
 
-        <div class="standings-table-wrap">
+        <div class="standings-table-wrap gtouch-swipe">
             <table class="standings-table">
                 <thead>
                     <tr>
@@ -1301,7 +1520,7 @@ if ($pdo) {
                     <?php else: ?>
                         <?php foreach ($standings_teams as $idx => $st): ?>
                             <?php $rank = $idx + 1; ?>
-                            <tr class="<?= $rank <= 3 ? 'rank-podium rank-' . $rank : '' ?>">
+                            <tr class="<?= $rank <= 3 ? 'rank-podium rank-' . $rank : '' ?> gtouch-tap">
                                 <td>
                                     <?php if ($rank === 1): ?>
                                         <span class="rank-badge rank-gold">♔ 1</span>
@@ -1351,27 +1570,27 @@ if ($pdo) {
             <span aria-hidden="true">±</span> Tournament Rules
         </h2>
         <div class="rules-grid">
-            <div class="rule-entry">
+            <div class="rule-entry gtouch-hover">
                 <span class="rule-move">1.</span>
                 <span class="rule-text">FIDE Laws of Chess apply to all games. Standard FIDE rules govern all play and disputes.</span>
             </div>
-            <div class="rule-entry">
+            <div class="rule-entry gtouch-hover">
                 <span class="rule-move">2.</span>
                 <span class="rule-text">Round-robin format. Every team plays against all other participating teams in the championship.</span>
             </div>
-            <div class="rule-entry">
+            <div class="rule-entry gtouch-hover">
                 <span class="rule-move">3.</span>
                 <span class="rule-text">Time control: 25 minutes + 5 seconds increment per move. Rapid format throughout.</span>
             </div>
-            <div class="rule-entry">
+            <div class="rule-entry gtouch-hover">
                 <span class="rule-move">4.</span>
                 <span class="rule-text">Touch-move rule is strictly enforced. Once a piece is touched, it must be moved if legal.</span>
             </div>
-            <div class="rule-entry">
+            <div class="rule-entry gtouch-hover">
                 <span class="rule-move">5.</span>
                 <span class="rule-text">Electronic devices must be switched off and kept away from the playing area during games.</span>
             </div>
-            <div class="rule-entry">
+            <div class="rule-entry gtouch-hover">
                 <span class="rule-move">6.</span>
                 <span class="rule-text">Tiebreaks: Buchholz, then Sonneborn-Berger, then direct encounter. Final standings use these criteria in order.</span>
             </div>
@@ -1390,21 +1609,21 @@ if ($pdo) {
         </p>
 
         <!-- Live Tournament Rules Compliance Bar -->
-        <div class="compliance-bar" id="complianceBar" aria-live="polite">
+        <div class="compliance-bar gtouch-swipe" id="complianceBar" aria-live="polite">
             <div class="compliance-title">📋 Live Eligibility Status</div>
-            <div class="compliance-pill" id="pill-members">
+            <div class="compliance-pill gtouch-hover" id="pill-members">
                 <span class="pill-dot"></span>
                 <span class="pill-text">Roster: 4 / 6 Members</span>
             </div>
-            <div class="compliance-pill" id="pill-females">
+            <div class="compliance-pill gtouch-hover" id="pill-females">
                 <span class="pill-dot"></span>
                 <span class="pill-text">Female Quota: 0 / 2 Girls (Required)</span>
             </div>
-            <div class="compliance-pill" id="pill-batches">
+            <div class="compliance-pill gtouch-hover" id="pill-batches">
                 <span class="pill-dot"></span>
                 <span class="pill-text">Batches: 0 / 2 (Required)</span>
             </div>
-            <div class="compliance-pill" id="pill-format">
+            <div class="compliance-pill gtouch-hover" id="pill-format">
                 <span class="pill-dot"></span>
                 <span class="pill-text">Reg No Format: TG/YYYY/XXXX</span>
             </div>
@@ -1447,10 +1666,10 @@ if ($pdo) {
                 </div>
 
                 <div class="form-actions-bar">
-                    <button type="button" id="btnAddMember" class="btn-add-member">
+                    <button type="button" id="btnAddMember" class="btn-add-member gtouch-tap">
                         <span style="font-size: 1.25rem; line-height: 1;">+</span> Add Reserve Player (Max 6)
                     </button>
-                    <button type="submit" id="btnSubmitReg" class="btn-submit-reg">
+                    <button type="submit" id="btnSubmitReg" class="btn-submit-reg gtouch-ripple gtouch-long-press">
                         Submit Team Registration
                         <span aria-hidden="true">→</span>
                         <span style="font-weight: normal; opacity: 0.75; font-size: 0.9rem;">1.e4</span>
@@ -1474,11 +1693,11 @@ if ($pdo) {
                 University of Ruhuna, Kamburupitiya
             </div>
             <div style="text-align: right;">
-                <a href="#register" class="footer-cta">
+                <a href="#register" class="footer-cta gtouch-ripple">
                     Register Now <span aria-hidden="true">→</span>
                 </a>
                 <div class="footer-colophon" style="margin-top: 1.25rem;">
-                    © 2026 Faculty of Technology, University of Ruhuna · <a href="admin.php" style="color: var(--ink-light); text-decoration: underline;">Admin Portal</a>
+                    © 2026 Faculty of Technology, University of Ruhuna · <a href="admin.php" style="color: var(--ink-light); text-decoration: underline;" class="gtouch-hover">Admin Portal</a>
                 </div>
             </div>
         </div>
@@ -1893,6 +2112,131 @@ if ($pdo) {
                     </div>`;
             });
         });
+
+        // ── 4. Particles.js Configuration ──
+        particlesJS('particles-js', {
+            "particles": {
+                "number": {
+                    "value": 60,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": ["#C0392B", "#1A1A1A", "#FFD700", "#C0C0C0", "#CD7F32"]
+                },
+                "shape": {
+                    "type": "char",
+                    "character": {
+                        "value": ["♙", "♟", "♖", "♜", "♘", "♞", "♗", "♝", "♕", "♛", "♔"]
+                    }
+                },
+                "opacity": {
+                    "value": 0.1,
+                    "random": true,
+                    "anim": {
+                        "enable": true,
+                        "speed": 1,
+                        "opacity_min": 0.05,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 15,
+                    "random": true,
+                    "anim": {
+                        "enable": true,
+                        "speed": 2,
+                        "size_min": 8,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": false
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 1,
+                    "direction": "none",
+                    "random": true,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "repulse"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "repulse": {
+                        "distance": 200,
+                        "duration": 0.4
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+
+        // ── 5. Header Scroll Effect ──
+        var siteHeader = document.getElementById('siteHeader');
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 100) {
+                siteHeader.classList.add('scrolled');
+            } else {
+                siteHeader.classList.remove('scrolled');
+            }
+        });
+
+        // ── 6. Parallax Effect for Floating Pieces ──
+        window.addEventListener('mousemove', function(e) {
+            var pieces = document.querySelectorAll('.floating-piece');
+            var mouseX = e.clientX / window.innerWidth;
+            var mouseY = e.clientY / window.innerHeight;
+            
+            pieces.forEach(function(piece, index) {
+                var offsetX = (mouseX - 0.5) * 20 * (index + 1);
+                var offsetY = (mouseY - 0.5) * 20 * (index + 1);
+                piece.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+            });
+        });
+
+        // ── 7. Touch/Mobile Parallax ──
+        window.addEventListener('touchmove', function(e) {
+            var pieces = document.querySelectorAll('.floating-piece');
+            if (e.touches && e.touches.length > 0) {
+                var touchX = e.touches[0].clientX / window.innerWidth;
+                var touchY = e.touches[0].clientY / window.innerHeight;
+                
+                pieces.forEach(function(piece, index) {
+                    var offsetX = (touchX - 0.5) * 10 * (index + 1);
+                    var offsetY = (touchY - 0.5) * 10 * (index + 1);
+                    piece.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                });
+            }
+        });
+
+        // ── 8. Haptic Feedback for Mobile Devices ──
+        if ('vibrate' in navigator) {
+            document.querySelectorAll('.gtouch-tap, .gtouch-long-press').forEach(function(element) {
+                element.addEventListener('touchstart', function() {
+                    navigator.vibrate([20]);
+                });
+            });
+        }
 
     })();
     </script>
