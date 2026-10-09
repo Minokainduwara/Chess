@@ -126,16 +126,25 @@ $page = $_GET['page'] ?? 'dashboard';
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
     <style>
-        .portal-nav { margin-bottom: 2rem; border-bottom: 1px solid var(--checker); padding-bottom: 1rem; }
-        .portal-nav a { margin-right: 1.5rem; font-weight: 600; font-size: 1.1rem; color: var(--ink-light); }
+        .portal-nav { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--checker); padding-bottom: 1rem; }
+        .portal-nav a { font-weight: 600; font-size: 1.1rem; color: var(--ink-light); text-decoration: none; }
         .portal-nav a.active { color: var(--red); border-bottom: 2px solid var(--red); padding-bottom: 0.2rem; }
-        .card { background: var(--card); border: 1px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 2rem; margin-bottom: 2rem; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .card { background: var(--card); border: 1px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 2rem; margin-bottom: 2rem; overflow-wrap: break-word; }
+        
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 1rem; }
+        .table { width: 100%; border-collapse: collapse; min-width: 600px; }
         .table th, .table td { padding: 0.75rem; border: 1px solid var(--checker); text-align: left; }
         .table th { background: var(--bg-alt); font-weight: bold; font-family: var(--font-display); }
-        .btn-primary { background: var(--red); color: #fff; padding: 0.75rem 1.5rem; border: none; font-weight: bold; cursor: pointer; display: inline-block; }
+        .btn-primary { background: var(--red); color: #fff; padding: 0.75rem 1.5rem; border: none; font-weight: bold; cursor: pointer; display: inline-block; white-space: nowrap; }
         .btn-primary:hover { background: var(--red-hover); }
         .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--ink); box-sizing: border-box; margin-top: 0.25rem; font-size: 1rem; font-family: var(--font-ui); }
+        
+        /* Mobile Specific Overrides */
+        @media (max-width: 768px) {
+            .card { padding: 1rem; box-shadow: 2px 2px 0 var(--ink); }
+            main { padding-top: 2rem !important; }
+            .team-header-row { flex-direction: column; align-items: flex-start !important; gap: 1rem; }
+        }
     </style>
 </head>
 <body>
@@ -188,7 +197,7 @@ $page = $_GET['page'] ?? 'dashboard';
                     </form>
                 </div>
             <?php else: ?>
-                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem;">
+                <div class="team-header-row" style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem;">
                     <h1 class="section-title">Team: <?= htmlspecialchars($team_info['team_name']) ?></h1>
                     <a href="?action=logout" style="color: var(--red); font-weight: bold;">Log Out →</a>
                 </div>
@@ -201,28 +210,30 @@ $page = $_GET['page'] ?? 'dashboard';
                 <?php if ($page === 'dashboard'): ?>
                     <div class="card">
                         <h2 style="font-size: 1.5rem; margin-bottom: 1rem; font-family: var(--font-display);">Squad Roster</h2>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Order</th>
-                                    <th>Name</th>
-                                    <th>Reg Number</th>
-                                    <th>Gender</th>
-                                    <th>Batch</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($members as $m): ?>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
                                     <tr>
-                                        <td><?= $m['member_order'] ?></td>
-                                        <td><?= htmlspecialchars($m['name']) ?> <?= $m['is_captain'] ? '<strong>(C)</strong>' : '' ?></td>
-                                        <td><?= htmlspecialchars($m['reg_number']) ?></td>
-                                        <td><?= $m['gender'] ?></td>
-                                        <td><?= htmlspecialchars($m['batch_year']) ?></td>
+                                        <th>Order</th>
+                                        <th>Name</th>
+                                        <th>Reg Number</th>
+                                        <th>Gender</th>
+                                        <th>Batch</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($members as $m): ?>
+                                        <tr>
+                                            <td><?= $m['member_order'] ?></td>
+                                            <td><?= htmlspecialchars($m['name']) ?> <?= $m['is_captain'] ? '<strong>(C)</strong>' : '' ?></td>
+                                            <td><?= htmlspecialchars($m['reg_number']) ?></td>
+                                            <td><?= $m['gender'] ?></td>
+                                            <td><?= htmlspecialchars($m['batch_year']) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                 <?php elseif ($page === 'dropboards'): ?>
@@ -244,28 +255,30 @@ $page = $_GET['page'] ?? 'dashboard';
                                 <form method="POST">
                                     <input type="hidden" name="drop_action" value="1">
                                     <input type="hidden" name="round_number" value="<?= $active_round['round_number'] ?>">
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th style="text-align: center; width: 60px;">Drop</th>
-                                                <th>Order</th>
-                                                <th>Name</th>
-                                                <th>Reg Number</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($members as $m): ?>
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <thead>
                                                 <tr>
-                                                    <td style="text-align: center;">
-                                                        <input type="checkbox" name="dropped_members[]" value="<?= $m['id'] ?>" <?= in_array($m['id'], $drops) ? 'checked' : '' ?> style="transform: scale(1.2);">
-                                                    </td>
-                                                    <td><?= $m['member_order'] ?></td>
-                                                    <td><?= htmlspecialchars($m['name']) ?></td>
-                                                    <td><?= htmlspecialchars($m['reg_number']) ?></td>
+                                                    <th style="text-align: center; width: 60px;">Drop</th>
+                                                    <th>Order</th>
+                                                    <th>Name</th>
+                                                    <th>Reg Number</th>
                                                 </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($members as $m): ?>
+                                                    <tr>
+                                                        <td style="text-align: center;">
+                                                            <input type="checkbox" name="dropped_members[]" value="<?= $m['id'] ?>" <?= in_array($m['id'], $drops) ? 'checked' : '' ?> style="transform: scale(1.2);">
+                                                        </td>
+                                                        <td><?= $m['member_order'] ?></td>
+                                                        <td><?= htmlspecialchars($m['name']) ?></td>
+                                                        <td><?= htmlspecialchars($m['reg_number']) ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                     <br>
                                     <button type="submit" class="btn-primary">Save Drop Boards</button>
                                 </form>
@@ -284,26 +297,28 @@ $page = $_GET['page'] ?? 'dashboard';
                                         }
                                     }
                                 ?>
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Status</th>
-                                            <th>Order</th>
-                                            <th>Name</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($members as $m): ?>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
                                             <tr>
-                                                <td style="font-weight: bold; color: <?= in_array($m['id'], $actual_drops) ? 'var(--red)' : 'var(--blue)' ?>;">
-                                                    <?= in_array($m['id'], $actual_drops) ? 'Dropped' : 'Playing' ?>
-                                                </td>
-                                                <td><?= $m['member_order'] ?></td>
-                                                <td><?= htmlspecialchars($m['name']) ?></td>
+                                                <th>Status</th>
+                                                <th>Order</th>
+                                                <th>Name</th>
                                             </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($members as $m): ?>
+                                                <tr>
+                                                    <td style="font-weight: bold; color: <?= in_array($m['id'], $actual_drops) ? 'var(--red)' : 'var(--blue)' ?>;">
+                                                        <?= in_array($m['id'], $actual_drops) ? 'Dropped' : 'Playing' ?>
+                                                    </td>
+                                                    <td><?= $m['member_order'] ?></td>
+                                                    <td><?= htmlspecialchars($m['name']) ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
                             <?php endif; ?>
                         <?php else: ?>
                             <p>There are no active rounds at the moment.</p>
