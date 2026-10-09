@@ -34,6 +34,12 @@ CREATE TABLE IF NOT EXISTS `tournament_settings` (
 -- - 4 to 6 members per team
 -- - At least 1 female per team
 -- - At least 2 distinct batch years per team
+--
+-- tournament_settings keys:
+--   scoreboard_visible  '1' | '0'   show/hide public standings
+--   scoreboard_status   free text    note shown beside standings
+--   countdown_enabled   '1' | '0'   show/hide public countdown
+--   countdown_target    'Y-m-d H:i:s' tournament start (Asia/Colombo)
 CREATE TABLE IF NOT EXISTS `members` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `team_id` INT NOT NULL,

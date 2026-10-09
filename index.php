@@ -5,6 +5,11 @@ $scoreboard_visible = true;
 $scoreboard_status = 'Standings updated live after each round';
 $standings_teams = [];
 
+// ── Countdown defaults ──
+$countdown_enabled = true;
+$countdown_target = '2026-10-10 07:00:00';
+$countdown_iso = '';
+
 if ($pdo) {
     $stmt_set = $pdo->query("SELECT setting_key, setting_value FROM `tournament_settings`");
     $settings = [];
@@ -13,6 +18,9 @@ if ($pdo) {
     }
     $scoreboard_visible = ($settings['scoreboard_visible'] ?? '1') === '1';
     $scoreboard_status = $settings['scoreboard_status'] ?? 'Standings updated live after each round';
+
+    $countdown_enabled = ($settings['countdown_enabled'] ?? '1') === '1';
+    $countdown_target  = $settings['countdown_target'] ?? '2026-10-10 07:00:00';
 
     if ($scoreboard_visible) {
         $stmt_st = $pdo->query("
@@ -23,14 +31,34 @@ if ($pdo) {
         $standings_teams = $stmt_st->fetchAll();
     }
 }
+
+/**
+ * Render the countdown target as an absolute ISO-8601 instant.
+ *
+ * The target is stored as Sri Lankan venue-local time (Asia/Colombo, UTC+05:30).
+ * Emitting it WITH the offset means every visitor's browser resolves to the same
+ * absolute instant, regardless of the visitor's own timezone or the server's
+ * (PHP here runs in UTC). Without the offset the same wall-clock string would be
+ * interpreted in each visitor's local zone and the countdown would be wrong.
+ */
+$countdown_iso = '';
+if ($countdown_enabled && $countdown_target !== '') {
+    try {
+        $tz_venue  = new DateTimeZone('Asia/Colombo');
+        $dt_target = new DateTime($countdown_target, $tz_venue);
+        $countdown_iso = $dt_target->format(DATE_ATOM);   // 2026-10-10T07:00:00+05:30
+    } catch (Exception $e) {
+        $countdown_iso = '';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faculty of Technology Chess Championship 2026 — University of Ruhuna</title>
-    <meta name="description" content="The official chess championship of the Faculty of Technology, University of Ruhuna. Register now for the 2026 tournament.">
+    <title>FOT Knights Arena — University of Ruhuna</title>
+    <meta name="description" content="The official chess tournament of the Faculty of Technology, University of Ruhuna. FOT Knights Arena — 10 October 2026, 7001 Hall. Register now.">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" type="image/png" href="favicon.png">
     <link rel="shortcut icon" href="favicon.ico">
@@ -1020,6 +1048,103 @@ if ($pdo) {
             margin-bottom: 0.35rem;
         }
 
+        /* ── Tournament Countdown ── */
+        .countdown {
+            padding: 4rem 0;
+        }
+        .countdown-heading {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.875rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .countdown-heading::after {
+            content: '';
+            flex: 1;
+            height: 10px;
+            background: var(--checker);
+            opacity: 0.9;
+        }
+        .countdown-lead {
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            color: var(--ink-light);
+            margin-bottom: 2rem;
+        }
+        .countdown-lead strong {
+            color: var(--ink);
+            font-weight: 600;
+        }
+        .countdown-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+            max-width: 640px;
+        }
+        .countdown-cell {
+            background: var(--card);
+            border: 1px solid var(--ink);
+            border-top: 3px solid var(--ink);
+            padding: 1.25rem 0.75rem 1rem;
+            text-align: center;
+        }
+        .countdown-num {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(1.85rem, 5vw, 2.75rem);
+            line-height: 1;
+            color: var(--ink);
+            font-variant-numeric: tabular-nums;
+            display: block;
+        }
+        .countdown-unit {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 0.6875rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ink-light);
+            margin-top: 0.6rem;
+            display: block;
+        }
+        /* Under one hour the clock turns red — like a chess clock flag falling */
+        .countdown.is-urgent .countdown-cell {
+            border-top-color: var(--red);
+            border-color: var(--red);
+        }
+        .countdown.is-urgent .countdown-num {
+            color: var(--red);
+        }
+        .countdown-done {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.35rem;
+            letter-spacing: 0.02em;
+            color: var(--cream);
+            background: var(--ink);
+            display: inline-block;
+            padding: 0.85rem 1.75rem;
+        }
+        .countdown-sr {
+            position: absolute;
+            width: 1px; height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+        }
+        @media (max-width: 768px) {
+            .countdown-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                max-width: 420px;
+            }
+        }
+
         /* ── Mobile Form Refinement ── */
         @media (max-width: 768px) {
             .members-grid {
@@ -1372,8 +1497,8 @@ if ($pdo) {
         <div class="page-rail hero-inner">
             <div class="hero-copy">
                 <h1 id="hero-title" class="hero-title">
-                    Faculty of Technology<br>
-                    Chess Championship<br>
+                    FOT Knights<br>
+                    Arena<br>
                     2026
                 </h1>
                 <p class="hero-subtitle">University of Ruhuna</p>
@@ -1383,6 +1508,24 @@ if ($pdo) {
                     <span class="hero-cta-notation" aria-hidden="true">1.e4</span>
                 </a>
             </div>
+            <?php if ($countdown_iso !== ''): ?>
+            <div class="countdown page-rail" id="countdown" data-target="<?= htmlspecialchars($countdown_iso, ENT_QUOTES) ?>">
+                <h2 class="countdown-heading">
+                    <span aria-hidden="true">♜</span> Countdown to First Move
+                </h2>
+                <p class="countdown-lead">
+                    <strong>FOT Knights Arena</strong> — 10th October 2026, 7:00 AM ·
+                    7001 Hall, Faculty of Technology, University of Ruhuna
+                </p>
+                <div class="countdown-grid" role="timer" aria-live="off">
+                    <div class="countdown-cell"><span class="countdown-num" id="cd-days">--</span><span class="countdown-unit">Days</span></div>
+                    <div class="countdown-cell"><span class="countdown-num" id="cd-hours">--</span><span class="countdown-unit">Hours</span></div>
+                    <div class="countdown-cell"><span class="countdown-num" id="cd-mins">--</span><span class="countdown-unit">Minutes</span></div>
+                    <div class="countdown-cell"><span class="countdown-num" id="cd-secs">--</span><span class="countdown-unit">Seconds</span></div>
+                </div>
+                <p class="countdown-sr" id="cd-sr" aria-live="polite"></p>
+            </div>
+            <?php endif; ?>
             <div class="hero-board">
                 <div class="chess-diagram gtouch-hover" role="img" aria-label="Chess diagram showing a Sicilian Defense position">
                     <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
@@ -1460,14 +1603,14 @@ if ($pdo) {
                 <span class="detail-symbol" aria-hidden="true">♔</span>
                 <div>
                     <div class="detail-label">Date</div>
-                    <div class="detail-value">10th October 2026</div>
+                    <div class="detail-value">10th October 2026, 7:00 AM</div>
                 </div>
             </div>
             <div class="detail-item gtouch-swipe">
                 <span class="detail-symbol" aria-hidden="true">♕</span>
                 <div>
                     <div class="detail-label">Venue</div>
-                    <div class="detail-value">Faculty of Technology Canteen,<br>University of Ruhuna, Kamburupitiya</div>
+                    <div class="detail-value">7001 Hall,<br>Faculty of Technology, University of Ruhuna</div>
                 </div>
             </div>
             <div class="detail-item gtouch-swipe">
@@ -1535,7 +1678,7 @@ if ($pdo) {
     <section class="standings page-rail" id="standings" aria-labelledby="standings-heading">
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 2rem;">
             <h2 class="standings-heading" id="standings-heading" style="margin-bottom: 0;">
-                <span aria-hidden="true">♛</span> Championship Standings
+                <span aria-hidden="true">♛</span> Arena Standings
             </h2>
             <?php if (!empty($scoreboard_status)): ?>
                 <span class="standings-status-badge gtouch-hover">
@@ -1655,7 +1798,7 @@ if ($pdo) {
             <span aria-hidden="true">♔</span> Official Team Registration
         </h2>
         <p class="reg-lead">
-            Register your squad for the Faculty of Technology Chess Championship 2026. Each team requires a minimum of 4 and a maximum of 6 registered students. Per championship rules, every team <strong>must include at least 1 female player</strong> and <strong>represent at least two batches</strong>.
+            Register your squad for FOT Knights Arena 2026. Each team requires a minimum of 4 and a maximum of 6 registered students. Per tournament rules, every team <strong>must include at least 1 female player</strong> and <strong>represent at least two batches</strong>.
         </p>
 
         <!-- Live Tournament Rules Compliance Bar -->
@@ -2288,6 +2431,65 @@ if ($pdo) {
             });
         }
 
+    })();
+    </script>
+
+    <!-- ═══ COUNTDOWN TICKER ═══ -->
+    <script>
+    (function () {
+        var box = document.getElementById('countdown');
+        if (!box) return;
+
+        // Absolute instant, already offset-normalised server-side (e.g. +05:30).
+        var target = new Date(box.getAttribute('data-target'));
+        if (isNaN(target.getTime())) return;
+
+        var elDays  = document.getElementById('cd-days');
+        var elHours = document.getElementById('cd-hours');
+        var elMins  = document.getElementById('cd-mins');
+        var elSecs  = document.getElementById('cd-secs');
+        var elSr    = document.getElementById('cd-sr');
+        var grid    = box.querySelector('.countdown-grid');
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function render() {
+            var remaining = target.getTime() - Date.now();
+
+            if (remaining <= 0) {
+                if (window.__cdDone) return;
+                window.__cdDone = true;
+                clearInterval(window.__cdTimer);
+                if (grid) grid.innerHTML =
+                    '<div class="countdown-done">♔ Play in Progress</div>';
+                if (elSr) elSr.textContent = 'FOT Knights Arena has started. Play is in progress.';
+                return;
+            }
+
+            var secs = Math.floor(remaining / 1000);
+            var d = Math.floor(secs / 86400);
+            var h = Math.floor((secs % 86400) / 3600);
+            var m = Math.floor((secs % 3600) / 60);
+            var s = secs % 60;
+
+            if (elDays)  elDays.textContent  = pad(d);
+            if (elHours) elHours.textContent = pad(h);
+            if (elMins)  elMins.textContent  = pad(m);
+            if (elSecs)  elSecs.textContent  = pad(s);
+
+            // Clock-red urgency once under an hour
+            box.classList.toggle('is-urgent', remaining < 3600000);
+
+            // Only announce on whole-minute boundaries — avoids a chatty
+            // screen reader reading out every second.
+            if (elSr && s === 0) {
+                elSr.textContent = d + ' day' + (d === 1 ? '' : 's') + ', ' + h +
+                    ' hour' + (h === 1 ? '' : 's') + ' until FOT Knights Arena begins.';
+            }
+        }
+
+        render();
+        window.__cdTimer = setInterval(render, 1000);
     })();
     </script>
 </body>

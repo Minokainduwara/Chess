@@ -1,7 +1,8 @@
 <?php
 /**
  * Database Connection & Auto-Initialization
- * University of Ruhuna - Faculty of Technology Chess Championship
+ * University of Ruhuna - Faculty of Technology
+ * FOT Knights Arena — Chess Tournament
  */
 
 $db_host = '127.0.0.1';
@@ -88,7 +89,9 @@ try {
     $pdo->exec("
         INSERT IGNORE INTO `tournament_settings` (`setting_key`, `setting_value`) VALUES
         ('scoreboard_visible', '1'),
-        ('scoreboard_status', 'Standings updated live after each round');
+        ('scoreboard_status', 'Standings updated live after each round'),
+        ('countdown_enabled', '1'),
+        ('countdown_target', '2026-10-10 07:00:00');
     ");
 
     // Seed default admin if none exists (Username: admin, Password: admin123)

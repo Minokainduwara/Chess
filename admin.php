@@ -1,6 +1,7 @@
 <?php
 /**
- * Admin Panel — University of Ruhuna, Faculty of Technology Chess Championship
+ * Admin Panel — FOT Knights Arena
+ * University of Ruhuna, Faculty of Technology
  * View, filter, export, and manage registered teams and rosters
  */
 
@@ -89,6 +90,37 @@ if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_
     exit;
 }
 
+// Handle AJAX Instant Toggle Countdown Visibility (mirrors scoreboard toggle)
+if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_countdown_visibility') {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!$pdo) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Database connection unavailable']);
+        exit;
+    }
+
+    if (isset($_POST['visible'])) {
+        $new_visible = ($_POST['visible'] === '1' || $_POST['visible'] === 'true' || $_POST['visible'] === 1) ? '1' : '0';
+    } else {
+        $stmt_cur = $pdo->prepare("SELECT `setting_value` FROM `tournament_settings` WHERE `setting_key` = 'countdown_enabled' LIMIT 1");
+        $stmt_cur->execute();
+        $cur_val = $stmt_cur->fetchColumn();
+        $new_visible = ($cur_val === '1') ? '0' : '1';
+    }
+
+    $stmt_set = $pdo->prepare("INSERT INTO `tournament_settings` (`setting_key`, `setting_value`) VALUES ('countdown_enabled', ?) ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`)");
+    $stmt_set->execute([$new_visible]);
+
+    echo json_encode([
+        'success' => true,
+        'visible' => ($new_visible === '1'),
+        'message' => ($new_visible === '1')
+            ? 'Countdown published! It is now live on the homepage.'
+            : 'Countdown hidden! It is now removed from the homepage.'
+    ]);
+    exit;
+}
+
 // Handle Standings & Scoreboard Update POST
 if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_standings_action'])) {
     if ($pdo) {
@@ -98,6 +130,27 @@ if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_
         $stmt_set = $pdo->prepare("INSERT INTO `tournament_settings` (`setting_key`, `setting_value`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`)");
         $stmt_set->execute(['scoreboard_visible', $sb_visible]);
         $stmt_set->execute(['scoreboard_status', $sb_status]);
+
+        // ── Countdown settings ──
+        $cd_visible = (isset($_POST['countdown_enabled']) && ($_POST['countdown_enabled'] === '1' || $_POST['countdown_enabled'] === 'on')) ? '1' : '0';
+        $cd_raw     = trim($_POST['countdown_target'] ?? '');
+
+        // datetime-local posts "Y-m-d H:i" with no timezone; normalise to the
+        // stored venue-local format. Reject anything unparseable so a typo can
+        // never wipe a working countdown.
+        $cd_target = null;
+        if ($cd_raw !== '') {
+            try {
+                $cd_dt = new DateTime($cd_raw, new DateTimeZone('Asia/Colombo'));
+                $cd_target = $cd_dt->format('Y-m-d H:i:s');
+            } catch (Exception $e) {
+                $cd_target = null;
+            }
+        }
+        if ($cd_target !== null) {
+            $stmt_set->execute(['countdown_target', $cd_target]);
+        }
+        $stmt_set->execute(['countdown_enabled', $cd_visible]);
 
         if (isset($_POST['scores']) && is_array($_POST['scores'])) {
             $stmt_score = $pdo->prepare("
@@ -191,6 +244,10 @@ $total_females = 0;
 $total_males = 0;
 $batch_counts = [];
 
+// Countdown defaults (overwritten from DB when authenticated)
+$countdown_enabled = true;
+$countdown_target  = '2026-10-10 07:00:00';
+
 if ($is_authenticated && $pdo) {
     // Stats
     $total_teams = (int)$pdo->query("SELECT COUNT(*) FROM `teams`")->fetchColumn();
@@ -211,6 +268,10 @@ if ($is_authenticated && $pdo) {
     }
     $scoreboard_visible = ($settings['scoreboard_visible'] ?? '1') === '1';
     $scoreboard_status = $settings['scoreboard_status'] ?? 'Standings updated live after each round';
+
+    // Countdown settings
+    $countdown_enabled = ($settings['countdown_enabled'] ?? '1') === '1';
+    $countdown_target  = $settings['countdown_target'] ?? '2026-10-10 07:00:00';
 
     $stmt_st = $pdo->query("
         SELECT id, team_name, played, won, drawn, lost, game_points, match_points, standing_notes 
@@ -284,7 +345,7 @@ if ($is_authenticated && $pdo) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tournament Admin Panel — University of Ruhuna Chess Championship</title>
+    <title>FOT Knights Arena — Tournament Admin Panel</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="alternate icon" type="image/png" href="favicon.png">
     <link rel="shortcut icon" href="favicon.ico">
@@ -852,7 +913,7 @@ if ($is_authenticated && $pdo) {
             <a href="admin.php" class="admin-brand">
                 <div class="admin-brand-icon">♔</div>
                 <div>
-                    <div class="admin-brand-title">Faculty of Technology Chess Championship</div>
+                    <div class="admin-brand-title">FOT Knights Arena</div>
                     <div class="admin-brand-subtitle">Tournament Administration Portal</div>
                 </div>
             </a>
@@ -990,6 +1051,54 @@ if ($is_authenticated && $pdo) {
                                     Open Homepage Standings ↗
                                 </a>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ COUNTDOWN CONTROLS ═══ -->
+                    <div class="publish-control-box" style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+                            <div>
+                                <span style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--ink);">
+                                    ⏱ Homepage Countdown Timer
+                                </span>
+                                <span id="countdownLiveBadge" class="badge <?= $countdown_enabled ? 'badge-green' : 'badge-gold' ?>" style="margin-left: 0.4rem; vertical-align: middle;">
+                                    <?= $countdown_enabled ? '● LIVE ON HOMEPAGE' : '○ HIDDEN FROM HOMEPAGE' ?>
+                                </span>
+                            </div>
+                            <a href="index.php#countdown" target="_blank" class="btn-link" style="font-size: 0.85rem;">View on Homepage ↗</a>
+                        </div>
+
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                            <button type="button" id="instantCountdownToggleBtn" class="btn-toggle-scoreboard <?= $countdown_enabled ? 'btn-toggle-hide' : 'btn-toggle-publish' ?>">
+                                <span id="instantCountdownToggleBtnIcon" aria-hidden="true"><?= $countdown_enabled ? '✕' : '✓' ?></span>
+                                <span id="instantCountdownToggleBtnText"><?= $countdown_enabled ? 'Hide Countdown from Homepage' : 'Publish Countdown on Homepage' ?></span>
+                            </button>
+
+                            <label class="switch-toggle-wrap" title="Toggle countdown visibility instantly">
+                                <span class="switch-control">
+                                    <input type="checkbox" id="countdown_toggle_switch" <?= $countdown_enabled ? 'checked' : '' ?>>
+                                    <span class="switch-slider"></span>
+                                </span>
+                                <span style="font-size: 0.9rem; font-weight: 600; color: var(--ink);">Instant Switch</span>
+                            </label>
+                        </div>
+
+                        <div id="countdownInstantFeedback" style="display: none;"></div>
+
+                        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: flex-end; margin-top: 0.75rem;">
+                            <div>
+                                <label class="form-label" for="countdown_target" style="font-size: 0.85rem;">Tournament Start (Date &amp; Time)</label>
+                                <input type="datetime-local" id="countdown_target" name="countdown_target" class="form-control"
+                                       value="<?= htmlspecialchars(date('Y-m-d\TH:i', strtotime($countdown_target))) ?>"
+                                       style="max-width: 280px;">
+                                <span style="font-size: 0.85rem; color: var(--ink-muted); display: block; margin-top: 0.35rem;">
+                                    Countdown target in <strong>venue local time (Asia/Colombo, UTC+05:30)</strong>.<br>
+                                    Current: <strong><?= htmlspecialchars(date('j M Y, g:i a', strtotime($countdown_target))) ?></strong>
+                                    · <?= $countdown_enabled ? 'visible' : 'hidden' ?> on homepage.
+                                    Takes effect when you save below.
+                                </span>
+                            </div>
+                            <input type="hidden" id="countdown_enabled_input" name="countdown_enabled" value="<?= $countdown_enabled ? '1' : '0' ?>">
                         </div>
                     </div>
 
@@ -1374,6 +1483,90 @@ if ($is_authenticated && $pdo) {
         });
     }
 
+    // ── Countdown visibility instant toggle (mirrors scoreboard toggle) ──
+    function toggleCountdownVisibility(forcedVal) {
+        var hiddenInput = document.getElementById('countdown_enabled_input');
+        if (!hiddenInput) return;
+        var currentVal = hiddenInput.value === '1';
+        var targetVal = (typeof forcedVal === 'boolean') ? forcedVal : !currentVal;
+
+        var btn = document.getElementById('instantCountdownToggleBtn');
+        var btnText = document.getElementById('instantCountdownToggleBtnText');
+        var btnIcon = document.getElementById('instantCountdownToggleBtnIcon');
+        var toggleBox = document.getElementById('countdown_toggle_switch');
+        var badge = document.getElementById('countdownLiveBadge');
+        var feedback = document.getElementById('countdownInstantFeedback');
+
+        if (btn) btn.disabled = true;
+        if (toggleBox) toggleBox.disabled = true;
+
+        if (feedback) {
+            feedback.style.display = 'inline-flex';
+            feedback.className = 'instant-feedback-toast';
+            feedback.style.background = '#EDE6D2';
+            feedback.style.color = 'var(--ink)';
+            feedback.style.border = '1px solid var(--rule)';
+            feedback.style.opacity = '1';
+            feedback.innerHTML = '⏳ Updating countdown visibility...';
+        }
+
+        var formData = new FormData();
+        formData.append('action', 'toggle_countdown_visibility');
+        formData.append('visible', targetVal ? '1' : '0');
+
+        fetch('admin.php', { method: 'POST', body: formData })
+        .then(function(res) {
+            if (!res.ok) throw new Error('HTTP error ' + res.status);
+            return res.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                var isVis = !!data.visible;
+                hiddenInput.value = isVis ? '1' : '0';
+                if (toggleBox) toggleBox.checked = isVis;
+
+                if (badge) {
+                    badge.className = isVis ? 'badge badge-green' : 'badge badge-gold';
+                    badge.textContent = isVis ? '● LIVE ON HOMEPAGE' : '○ HIDDEN FROM HOMEPAGE';
+                }
+                if (btn) {
+                    btn.className = 'btn-toggle-scoreboard ' + (isVis ? 'btn-toggle-hide' : 'btn-toggle-publish');
+                    if (btnIcon) btnIcon.textContent = isVis ? '✕' : '✓';
+                    if (btnText) btnText.textContent = isVis ? 'Hide Countdown from Homepage' : 'Publish Countdown on Homepage';
+                }
+                if (feedback) {
+                    feedback.className = 'instant-feedback-toast ' + (isVis ? 'success-live' : 'success-hidden');
+                    feedback.style.background = '';
+                    feedback.style.border = '';
+                    feedback.innerHTML = isVis
+                        ? '✓ <strong>Published!</strong> Countdown is now live on the homepage.'
+                        : '✓ <strong>Hidden!</strong> Countdown is now hidden from the homepage.';
+                    setTimeout(function() {
+                        feedback.style.opacity = '0';
+                        setTimeout(function() {
+                            feedback.style.display = 'none';
+                            feedback.style.opacity = '1';
+                        }, 500);
+                    }, 3500);
+                }
+            } else {
+                alert(data.error || 'Failed to update countdown visibility.');
+                if (feedback) feedback.style.display = 'none';
+                if (toggleBox) toggleBox.checked = currentVal;
+            }
+        })
+        .catch(function(err) {
+            console.error('Error toggling countdown:', err);
+            alert('Could not update countdown visibility. Please try again.');
+            if (feedback) feedback.style.display = 'none';
+            if (toggleBox) toggleBox.checked = currentVal;
+        })
+        .finally(function() {
+            if (btn) btn.disabled = false;
+            if (toggleBox) toggleBox.disabled = false;
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         var btn = document.getElementById('instantToggleBtn');
         var toggleBox = document.getElementById('scoreboard_toggle_switch');
@@ -1386,6 +1579,20 @@ if ($is_authenticated && $pdo) {
         if (toggleBox) {
             toggleBox.addEventListener('change', function() {
                 toggleScoreboardVisibility(this.checked);
+            });
+        }
+
+        var cdBtn = document.getElementById('instantCountdownToggleBtn');
+        var cdBox = document.getElementById('countdown_toggle_switch');
+        if (cdBtn) {
+            cdBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                toggleCountdownVisibility();
+            });
+        }
+        if (cdBox) {
+            cdBox.addEventListener('change', function() {
+                toggleCountdownVisibility(this.checked);
             });
         }
     });
