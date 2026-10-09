@@ -1,8 +1,6 @@
 <?php
 /**
  * Captain Portal — FOT Knights Arena
- * University of Ruhuna, Faculty of Technology
- * Select drop boards for upcoming rounds
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -64,7 +62,6 @@ if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_
         if ($round['deadline'] && strtotime($round['deadline']) < time()) {
             $error_msg = 'The deadline for this round has passed.';
         } else {
-            // Count total members
             $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM `members` WHERE `team_id` = ?");
             $stmt_count->execute([$team_id]);
             $total_members = (int)$stmt_count->fetchColumn();
@@ -117,164 +114,219 @@ if ($is_authenticated && $pdo) {
         $drops = $stmt_drops->fetchAll(PDO::FETCH_COLUMN);
     }
 }
+
+$page = $_GET['page'] ?? 'dashboard';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Captain Portal - FOT Knights Arena</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
     <style>
-        body { font-family: -apple-system, system-ui, sans-serif; background: #f4f6f8; color: #333; margin: 0; padding: 0; }
-        .container { max-width: 800px; margin: 50px auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1, h2 { color: #1a1a1a; margin-top: 0; }
-        .alert { padding: 10px; margin-bottom: 20px; border-radius: 4px; }
-        .alert-error { background: #fee; color: #c00; border: 1px solid #fcc; }
-        .alert-success { background: #efe; color: #090; border: 1px solid #cfc; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #0056b3; color: #fff; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #004494; }
-        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .table th, .table td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        .table th { background: #f9f9f9; }
-        .logout-btn { float: right; color: #c00; text-decoration: none; font-weight: bold; }
+        .portal-nav { margin-bottom: 2rem; border-bottom: 1px solid var(--checker); padding-bottom: 1rem; }
+        .portal-nav a { margin-right: 1.5rem; font-weight: 600; font-size: 1.1rem; color: var(--ink-light); }
+        .portal-nav a.active { color: var(--red); border-bottom: 2px solid var(--red); padding-bottom: 0.2rem; }
+        .card { background: var(--card); border: 1px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 2rem; margin-bottom: 2rem; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .table th, .table td { padding: 0.75rem; border: 1px solid var(--checker); text-align: left; }
+        .table th { background: var(--bg-alt); font-weight: bold; font-family: var(--font-display); }
+        .btn-primary { background: var(--red); color: #fff; padding: 0.75rem 1.5rem; border: none; font-weight: bold; cursor: pointer; display: inline-block; }
+        .btn-primary:hover { background: var(--red-hover); }
+        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--ink); box-sizing: border-box; margin-top: 0.25rem; font-size: 1rem; font-family: var(--font-ui); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <?php if ($error_msg): ?>
-            <div class="alert alert-error"><?= htmlspecialchars($error_msg) ?></div>
-        <?php endif; ?>
-        <?php if ($success_msg): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($success_msg) ?></div>
-        <?php endif; ?>
+    <header class="site-header">
+        <div class="page-rail header-inner">
+            <a href="index.php" class="header-brand">
+                <div class="header-brand-text">
+                    University of Ruhuna
+                    <span>Faculty of Technology</span>
+                </div>
+            </a>
+            <nav class="header-nav">
+                <a href="index.php">Public Site</a>
+                <span class="header-nav-sep">·</span>
+                <a href="captain.php" style="color: var(--blue); font-weight: 600;">Captain Portal</a>
+                <span class="header-nav-sep">·</span>
+                <a href="admin.php" style="color: var(--red); font-weight: 600;">Admin</a>
+            </nav>
+        </div>
+    </header>
 
-        <?php if (!$is_authenticated): ?>
-            <h1>Captain Portal Login</h1>
-            <form method="POST">
-                <input type="hidden" name="login_action" value="1">
-                <div class="form-group">
-                    <label>Team Name</label>
-                    <input type="text" name="team_name" required>
+    <main style="padding-top: 6rem; min-height: 80vh;">
+        <div class="page-rail">
+            <?php if ($error_msg): ?>
+                <div style="background: #fee; color: #c00; padding: 1rem; border: 1px solid #fcc; margin-bottom: 1.5rem; font-weight: bold;">
+                    <?= htmlspecialchars($error_msg) ?>
                 </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" required>
+            <?php endif; ?>
+            <?php if ($success_msg): ?>
+                <div style="background: #efe; color: #090; padding: 1rem; border: 1px solid #cfc; margin-bottom: 1.5rem; font-weight: bold;">
+                    <?= htmlspecialchars($success_msg) ?>
                 </div>
-                <button type="submit">Log In</button>
-            </form>
-        <?php else: ?>
-            <a href="?action=logout" class="logout-btn">Log Out</a>
-            <h1>Welcome, <?= htmlspecialchars($team_info['team_name']) ?> Captain</h1>
-            <hr>
-            
-            <?php if ($active_round): ?>
-                <?php
-                date_default_timezone_set('Asia/Colombo');
-                $is_open = true;
-                if ($active_round['deadline'] && strtotime($active_round['deadline']) < time()) {
-                    $is_open = false;
-                }
-                $required_drops = count($members) - 4;
-                ?>
-                <h2>Round <?= (int)$active_round['round_number'] ?> Drop Boards</h2>
-                <p>Deadline: <?= $active_round['deadline'] ? date('Y-m-d h:i A', strtotime($active_round['deadline'])) : 'None' ?></p>
-                
-                <?php if ($is_open && $required_drops > 0): ?>
-                    <p>Select exactly <strong><?= $required_drops ?></strong> member(s) to drop for this round.</p>
+            <?php endif; ?>
+
+            <?php if (!$is_authenticated): ?>
+                <div class="card" style="max-width: 500px; margin: 2rem auto;">
+                    <h1 class="section-title">Captain Portal</h1>
+                    <p style="margin-bottom: 1.5rem; color: var(--ink-light);">Log in to manage your team's roster and drop boards.</p>
                     <form method="POST">
-                        <input type="hidden" name="drop_action" value="1">
-                        <input type="hidden" name="round_number" value="<?= $active_round['round_number'] ?>">
+                        <input type="hidden" name="login_action" value="1">
+                        <div style="margin-bottom: 1.25rem;">
+                            <label style="font-weight: bold; font-family: var(--font-display);">Team Name</label>
+                            <input type="text" name="team_name" class="form-control" required>
+                        </div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="font-weight: bold; font-family: var(--font-display);">Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%;">Log In</button>
+                    </form>
+                </div>
+            <?php else: ?>
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem;">
+                    <h1 class="section-title">Team: <?= htmlspecialchars($team_info['team_name']) ?></h1>
+                    <a href="?action=logout" style="color: var(--red); font-weight: bold;">Log Out →</a>
+                </div>
+
+                <div class="portal-nav">
+                    <a href="?page=dashboard" class="<?= $page === 'dashboard' ? 'active' : '' ?>">Roster Dashboard</a>
+                    <a href="?page=dropboards" class="<?= $page === 'dropboards' ? 'active' : '' ?>">Drop Boards Management</a>
+                </div>
+
+                <?php if ($page === 'dashboard'): ?>
+                    <div class="card">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 1rem; font-family: var(--font-display);">Squad Roster</h2>
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Drop</th>
                                     <th>Order</th>
                                     <th>Name</th>
                                     <th>Reg Number</th>
                                     <th>Gender</th>
+                                    <th>Batch</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($members as $m): ?>
                                     <tr>
-                                        <td>
-                                            <input type="checkbox" name="dropped_members[]" value="<?= $m['id'] ?>" <?= in_array($m['id'], $drops) ? 'checked' : '' ?>>
-                                        </td>
                                         <td><?= $m['member_order'] ?></td>
-                                        <td><?= htmlspecialchars($m['name']) ?> <?= $m['is_captain'] ? '(C)' : '' ?></td>
+                                        <td><?= htmlspecialchars($m['name']) ?> <?= $m['is_captain'] ? '<strong>(C)</strong>' : '' ?></td>
                                         <td><?= htmlspecialchars($m['reg_number']) ?></td>
                                         <td><?= $m['gender'] ?></td>
+                                        <td><?= htmlspecialchars($m['batch_year']) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
-                        <br>
-                        <button type="submit">Save Drop Boards</button>
-                    </form>
-                <?php elseif ($is_open && $required_drops === 0): ?>
-                    <p>Your team has exactly 4 members. No drops are necessary.</p>
-                <?php else: ?>
-                    <p style="color:red; font-weight:bold;">The deadline for this round has passed. Drop boards are locked.</p>
-                    <?php
-                        $actual_drops = $drops;
-                        $playing_count = 0;
-                        foreach ($members as $m) {
-                            if (!in_array($m['id'], $actual_drops) && $playing_count < 4) {
-                                $playing_count++;
-                            } elseif (!in_array($m['id'], $actual_drops)) {
-                                $actual_drops[] = $m['id'];
-                            }
-                        }
-                    ?>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Status</th>
-                                <th>Order</th>
-                                <th>Name</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($members as $m): ?>
-                                <tr>
-                                    <td><?= in_array($m['id'], $actual_drops) ? '<span style="color:red">Dropped</span>' : '<span style="color:green">Playing</span>' ?></td>
-                                    <td><?= $m['member_order'] ?></td>
-                                    <td><?= htmlspecialchars($m['name']) ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            <?php else: ?>
-                <p>There are no active rounds at the moment.</p>
-            <?php endif; ?>
+                    </div>
 
-            <h2 style="margin-top:40px;">Team Roster</h2>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Order</th>
-                        <th>Name</th>
-                        <th>Reg Number</th>
-                        <th>Gender</th>
-                        <th>Batch</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($members as $m): ?>
-                        <tr>
-                            <td><?= $m['member_order'] ?></td>
-                            <td><?= htmlspecialchars($m['name']) ?> <?= $m['is_captain'] ? '(Captain)' : '' ?></td>
-                            <td><?= htmlspecialchars($m['reg_number']) ?></td>
-                            <td><?= $m['gender'] ?></td>
-                            <td><?= htmlspecialchars($m['batch_year']) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
-    </div>
+                <?php elseif ($page === 'dropboards'): ?>
+                    <div class="card">
+                        <?php if ($active_round): ?>
+                            <?php
+                            date_default_timezone_set('Asia/Colombo');
+                            $is_open = true;
+                            if ($active_round['deadline'] && strtotime($active_round['deadline']) < time()) {
+                                $is_open = false;
+                            }
+                            $required_drops = count($members) - 4;
+                            ?>
+                            <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; font-family: var(--font-display);">Round <?= (int)$active_round['round_number'] ?> Drop Boards</h2>
+                            <p style="color: var(--ink-light); margin-bottom: 1.5rem;">Deadline: <?= $active_round['deadline'] ? date('Y-m-d h:i A', strtotime($active_round['deadline'])) : 'None' ?></p>
+                            
+                            <?php if ($is_open && $required_drops > 0): ?>
+                                <p style="margin-bottom: 1rem; font-weight: bold;">Action Required: Select exactly <?= $required_drops ?> member(s) to drop for this round.</p>
+                                <form method="POST">
+                                    <input type="hidden" name="drop_action" value="1">
+                                    <input type="hidden" name="round_number" value="<?= $active_round['round_number'] ?>">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align: center; width: 60px;">Drop</th>
+                                                <th>Order</th>
+                                                <th>Name</th>
+                                                <th>Reg Number</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($members as $m): ?>
+                                                <tr>
+                                                    <td style="text-align: center;">
+                                                        <input type="checkbox" name="dropped_members[]" value="<?= $m['id'] ?>" <?= in_array($m['id'], $drops) ? 'checked' : '' ?> style="transform: scale(1.2);">
+                                                    </td>
+                                                    <td><?= $m['member_order'] ?></td>
+                                                    <td><?= htmlspecialchars($m['name']) ?></td>
+                                                    <td><?= htmlspecialchars($m['reg_number']) ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                    <br>
+                                    <button type="submit" class="btn-primary">Save Drop Boards</button>
+                                </form>
+                            <?php elseif ($is_open && $required_drops === 0): ?>
+                                <p>Your team has exactly 4 members. No drops are necessary.</p>
+                            <?php else: ?>
+                                <p style="color: var(--red); font-weight:bold; margin-bottom: 1rem;">The deadline for this round has passed. Drop boards are locked.</p>
+                                <?php
+                                    $actual_drops = $drops;
+                                    $playing_count = 0;
+                                    foreach ($members as $m) {
+                                        if (!in_array($m['id'], $actual_drops) && $playing_count < 4) {
+                                            $playing_count++;
+                                        } elseif (!in_array($m['id'], $actual_drops)) {
+                                            $actual_drops[] = $m['id'];
+                                        }
+                                    }
+                                ?>
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th>Order</th>
+                                            <th>Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($members as $m): ?>
+                                            <tr>
+                                                <td style="font-weight: bold; color: <?= in_array($m['id'], $actual_drops) ? 'var(--red)' : 'var(--blue)' ?>;">
+                                                    <?= in_array($m['id'], $actual_drops) ? 'Dropped' : 'Playing' ?>
+                                                </td>
+                                                <td><?= $m['member_order'] ?></td>
+                                                <td><?= htmlspecialchars($m['name']) ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <p>There are no active rounds at the moment.</p>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="page-rail footer-inner">
+            <div class="footer-info">
+                <strong>Contact the Organizers</strong>
+                Chess Society, Faculty of Technology<br>
+                University of Ruhuna, Kamburupitiya
+            </div>
+            <div style="text-align: right;">
+                <div class="footer-colophon" style="margin-top: 1.25rem;">
+                    © 2026 Faculty of Technology, University of Ruhuna · <a href="captain.php" style="color: var(--ink-light); text-decoration: underline;">Captain Portal</a> · <a href="admin.php" style="color: var(--ink-light); text-decoration: underline;">Admin Portal</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
