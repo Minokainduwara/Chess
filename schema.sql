@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS `teams` (
   `team_name` VARCHAR(150) NOT NULL UNIQUE,
   `contact_phone` VARCHAR(50) DEFAULT NULL,
   `contact_email` VARCHAR(150) DEFAULT NULL,
+  `password_hash` VARCHAR(255) DEFAULT NULL,
   `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
   `played` INT DEFAULT 0,
   `won` INT DEFAULT 0,
@@ -71,3 +72,25 @@ CREATE TABLE IF NOT EXISTS `admins` (
 -- Password: admin123
 INSERT IGNORE INTO `admins` (`id`, `username`, `password_hash`)
 VALUES (1, 'admin', '$2y$12$VBuPlK3tVI0prP4l//Q0s.R5mSnA5nYob6voVdrrTfh0umJC6ZV66');
+
+-- 4. Rounds Table
+CREATE TABLE IF NOT EXISTS `rounds` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `round_number` INT NOT NULL UNIQUE,
+  `status` ENUM('open', 'closed') NOT NULL DEFAULT 'open',
+  `deadline` DATETIME DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 5. Drop Boards Table
+CREATE TABLE IF NOT EXISTS `drop_boards` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `team_id` INT NOT NULL,
+  `round_number` INT NOT NULL,
+  `member_id` INT NOT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT `fk_drop_team` FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_drop_round` FOREIGN KEY (`round_number`) REFERENCES `rounds`(`round_number`) ON DELETE CASCADE,
+  CONSTRAINT `fk_drop_member` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE CASCADE,
+  UNIQUE KEY `unique_drop` (`team_id`, `round_number`, `member_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

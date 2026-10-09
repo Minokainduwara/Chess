@@ -49,6 +49,9 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' &
 // Check if authenticated
 $is_authenticated = !empty($_SESSION['admin_logged_in']);
 
+// Custom Modules
+require_once __DIR__ . '/admin_drops_actions.php';
+
 // Handle Team Deletion
 if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_team_id'])) {
     $del_id = (int)$_POST['delete_team_id'];
@@ -1432,9 +1435,11 @@ if ($is_authenticated && $pdo) {
                         </div>
                     </div>
                 <?php endforeach; ?>
-            <?php endif; ?>
-
         <?php endif; ?>
+
+        <?php require_once __DIR__ . '/admin_drops_view.php'; ?>
+
+    <?php endif; ?>
     <script>
     function autoCalcPoints(el) {
         var row = el.closest('tr');

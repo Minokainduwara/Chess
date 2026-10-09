@@ -30,6 +30,7 @@ if (!$pdo) {
 $team_name     = trim($_POST['team_name'] ?? '');
 $contact_phone = trim($_POST['contact_phone'] ?? '');
 $contact_email = trim($_POST['contact_email'] ?? '');
+$captain_password = trim($_POST['captain_password'] ?? '');
 $members_raw   = $_POST['members'] ?? [];
 
 $errors = [];
@@ -37,6 +38,8 @@ $errors = [];
 // Validate Team Name
 if ($team_name === '') {
     $errors['team_name'] = 'Team name is required.';
+} elseif ($captain_password === '') {
+    $errors['captain_password'] = 'Captain password is required.';
 } elseif (mb_strlen($team_name) < 3 || mb_strlen($team_name) > 100) {
     $errors['team_name'] = 'Team name must be between 3 and 100 characters.';
 } else {
@@ -168,11 +171,12 @@ try {
     $pdo->beginTransaction();
 
     // New teams start as 'pending': hidden from public standings until approved.
+    $password_hash = password_hash($captain_password, PASSWORD_DEFAULT);
     $stmt_team = $pdo->prepare("
-        INSERT INTO `teams` (`team_name`, `contact_phone`, `contact_email`, `status`) 
-        VALUES (?, ?, ?, 'pending')
+        INSERT INTO `teams` (`team_name`, `contact_phone`, `contact_email`, `password_hash`, `status`) 
+        VALUES (?, ?, ?, ?, 'pending')
     ");
-    $stmt_team->execute([$team_name, $contact_phone, $contact_email]);
+    $stmt_team->execute([$team_name, $contact_phone, $contact_email, $password_hash]);
     $team_id = (int)$pdo->lastInsertId();
 
     $stmt_member = $pdo->prepare("

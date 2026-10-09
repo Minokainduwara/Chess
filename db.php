@@ -71,11 +71,33 @@ try {
             `setting_key` VARCHAR(50) PRIMARY KEY,
             `setting_value` TEXT NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS `rounds` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `round_number` INT NOT NULL UNIQUE,
+            `label` VARCHAR(100) DEFAULT NULL,
+            `status` ENUM('open', 'closed') NOT NULL DEFAULT 'open',
+            `deadline` DATETIME DEFAULT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS `drop_boards` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `team_id` INT NOT NULL,
+            `round_number` INT NOT NULL,
+            `member_id` INT NOT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT `fk_drop_team` FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`) ON DELETE CASCADE,
+            CONSTRAINT `fk_drop_round` FOREIGN KEY (`round_number`) REFERENCES `rounds`(`round_number`) ON DELETE CASCADE,
+            CONSTRAINT `fk_drop_member` FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON DELETE CASCADE,
+            UNIQUE KEY `unique_drop` (`team_id`, `round_number`, `member_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
 
     // Run safe column migrations if table already existed previously
     $pdo->exec("
         ALTER TABLE `teams`
+            ADD COLUMN IF NOT EXISTS `password_hash` VARCHAR(255) DEFAULT NULL,
             ADD COLUMN IF NOT EXISTS `played` INT DEFAULT 0,
             ADD COLUMN IF NOT EXISTS `won` INT DEFAULT 0,
             ADD COLUMN IF NOT EXISTS `drawn` INT DEFAULT 0,
@@ -84,6 +106,11 @@ try {
             ADD COLUMN IF NOT EXISTS `match_points` INT DEFAULT 0,
             ADD COLUMN IF NOT EXISTS `tiebreak_sb` DECIMAL(6,2) DEFAULT 0.00,
             ADD COLUMN IF NOT EXISTS `standing_notes` VARCHAR(100) DEFAULT NULL;
+    ");
+
+    $pdo->exec("
+        ALTER TABLE `rounds`
+            ADD COLUMN IF NOT EXISTS `label` VARCHAR(100) DEFAULT NULL;
     ");
 
     // Approval workflow: newly registered teams get status 'pending' and stay

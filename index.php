@@ -9,6 +9,7 @@ $standings_teams = [];
 $countdown_enabled = true;
 $countdown_target = '2026-10-10 07:00:00';
 $countdown_iso = '';
+$countdown_label = "Countdown to First Move";
 
 if ($pdo) {
     $stmt_set = $pdo->query("SELECT setting_key, setting_value FROM `tournament_settings`");
@@ -30,6 +31,19 @@ if ($pdo) {
             ORDER BY match_points DESC, game_points DESC, won DESC, id ASC
         ");
         $standings_teams = $stmt_st->fetchAll();
+    }
+    
+    // Check for active round to override countdown
+    $countdown_label = "Countdown to First Move";
+    $stmt_round = $pdo->query("SELECT * FROM `rounds` WHERE `status` = 'open' ORDER BY `round_number` ASC LIMIT 1");
+    if ($stmt_round) {
+        $active_round = $stmt_round->fetch();
+        if ($active_round) {
+            $countdown_target = $active_round['deadline'] ?? $countdown_target;
+            if (!empty($active_round['label'])) {
+                $countdown_label = "Countdown to " . $active_round['label'];
+            }
+        }
     }
 }
 
@@ -1487,6 +1501,8 @@ if ($countdown_enabled && $countdown_target !== '') {
                 <span class="header-nav-sep" aria-hidden="true">·</span>
                 <a href="#register" class="gtouch-hover">Register</a>
                 <span class="header-nav-sep" aria-hidden="true">·</span>
+                <a href="captain.php" style="color: var(--blue); font-weight: 600;" class="gtouch-hover">Captain Portal</a>
+                <span class="header-nav-sep" aria-hidden="true">·</span>
                 <a href="admin.php" style="color: var(--red); font-weight: 600;" class="gtouch-hover">Admin</a>
             </nav>
         </div>
@@ -1504,7 +1520,7 @@ if ($countdown_enabled && $countdown_target !== '') {
                 <?php if ($countdown_iso !== ''): ?>
                 <div class="countdown" id="countdown" data-target="<?= htmlspecialchars($countdown_iso, ENT_QUOTES) ?>">
                     <h2 class="countdown-heading">
-                        <span aria-hidden="true">♜</span> Countdown to First Move
+                        <span aria-hidden="true">♜</span> <?= htmlspecialchars($countdown_label) ?>
                     </h2>
                     <div class="countdown-grid" role="timer" aria-live="off">
                         <div class="countdown-cell"><span class="countdown-num" id="cd-days">--</span><span class="countdown-unit">Days</span></div>
@@ -1836,6 +1852,11 @@ if ($countdown_enabled && $countdown_target !== '') {
                         <input type="tel" id="contact_phone" name="contact_phone" class="input-field" placeholder="e.g. 0771234567" required>
                         <span class="input-hint">For match pairings & captain briefings</span>
                     </div>
+                    <div class="input-group">
+                        <label class="input-label" for="captain_password">Captain Password <span class="req">*</span></label>
+                        <input type="password" id="captain_password" name="captain_password" class="input-field" placeholder="Enter password" required>
+                        <span class="input-hint">For logging into the Captain Portal</span>
+                    </div>
                 </div>
             </div>
 
@@ -1886,7 +1907,7 @@ if ($countdown_enabled && $countdown_target !== '') {
                     Register Now <span aria-hidden="true">→</span>
                 </a>
                 <div class="footer-colophon" style="margin-top: 1.25rem;">
-                    © 2026 Faculty of Technology, University of Ruhuna · <a href="admin.php" style="color: var(--ink-light); text-decoration: underline;" class="gtouch-hover">Admin Portal</a>
+                    © 2026 Faculty of Technology, University of Ruhuna · <a href="captain.php" style="color: var(--ink-light); text-decoration: underline;" class="gtouch-hover">Captain Portal</a> · <a href="admin.php" style="color: var(--ink-light); text-decoration: underline;" class="gtouch-hover">Admin Portal</a>
                 </div>
             </div>
         </div>
@@ -2189,6 +2210,9 @@ if ($countdown_enabled && $countdown_target !== '') {
 
             var contactPhone = document.getElementById('contact_phone').value.trim();
             if (!contactPhone) clientErrors.push("Please enter the team captain's contact phone number.");
+
+            var captainPassword = document.getElementById('captain_password').value.trim();
+            if (!captainPassword) clientErrors.push("Please enter a captain password.");
 
             if (totalCount < 4 || totalCount > 6) {
                 clientErrors.push('Every team must have between 4 and 6 members.');
