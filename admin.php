@@ -1186,7 +1186,7 @@ if ($is_authenticated && $pdo) {
                                     ♟ P: <?= (int)$team['played'] ?> · W: <?= (int)$team['won'] ?> · D: <?= (int)$team['drawn'] ?> · L: <?= (int)$team['lost'] ?> · GP: <?= number_format((float)$team['game_points'], 1) ?> · MP: <?= (int)$team['match_points'] ?>
                                 </span>
                                 <span class="badge badge-green">✓ <?= $team['member_count'] ?> Players</span>
-                                <span class="badge badge-female">✓ <?= $team['female_count'] ?> Girls</span>
+                                <span class="badge badge-female">✓ <?= $team['female_count'] ?> Girl<?= $team['female_count'] == 1 ? '' : 's' ?></span>
                                 <span class="badge badge-blue">✓ Batches: <?= htmlspecialchars($team['batches_list']) ?></span>
                                 <?php if (!empty($team['standing_notes'])): ?>
                                     <span class="badge" style="background: #E3F2FD; color: #1565C0; border: 1px solid #90CAF9; font-weight: 700;">

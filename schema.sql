@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `tournament_settings` (
 -- 2. Team Members Table
 -- Rules enforced:
 -- - 4 to 6 members per team
--- - At least 2 females per team
+-- - At least 1 female per team
 -- - At least 2 distinct batch years per team
 CREATE TABLE IF NOT EXISTS `members` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,

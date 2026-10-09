@@ -143,9 +143,9 @@ if ($member_count < 4) {
     $errors[] = "Every team can have a maximum of 6 members. You submitted {$member_count} members.";
 }
 
-// 3. Rule: Gender Quota (Must have at least 2 girls)
-if ($female_count < 2) {
-    $errors[] = "Tournament rule violation: Every team MUST have at least 2 female members (girls). Currently selected: {$female_count} female member(s).";
+// 3. Rule: Gender Quota (Must have at least 1 girl)
+if ($female_count < 1) {
+    $errors[] = "Tournament rule violation: Every team MUST have at least 1 female member (girl). Currently selected: {$female_count} female member(s).";
 }
 
 // 4. Rule: Batch Representation (Must represent at least two batches)

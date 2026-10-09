@@ -1655,7 +1655,7 @@ if ($pdo) {
             <span aria-hidden="true">♔</span> Official Team Registration
         </h2>
         <p class="reg-lead">
-            Register your squad for the Faculty of Technology Chess Championship 2026. Each team requires a minimum of 4 and a maximum of 6 registered students. Per championship rules, every team <strong>must include at least 2 female players</strong> and <strong>represent at least two batches</strong>.
+            Register your squad for the Faculty of Technology Chess Championship 2026. Each team requires a minimum of 4 and a maximum of 6 registered students. Per championship rules, every team <strong>must include at least 1 female player</strong> and <strong>represent at least two batches</strong>.
         </p>
 
         <!-- Live Tournament Rules Compliance Bar -->
@@ -1667,7 +1667,7 @@ if ($pdo) {
             </div>
             <div class="compliance-pill gtouch-hover" id="pill-females">
                 <span class="pill-dot"></span>
-                <span class="pill-text">Female Quota: 0 / 2 Girls (Required)</span>
+                <span class="pill-text">Female Quota: 0 / 1 Girl (Required)</span>
             </div>
             <div class="compliance-pill gtouch-hover" id="pill-batches">
                 <span class="pill-dot"></span>
@@ -1707,7 +1707,7 @@ if ($pdo) {
                         <span aria-hidden="true">♟</span> Squad Roster (Board 1 to 6)
                     </h3>
                     <span style="font-family: var(--font-display); font-size: 0.95rem; color: var(--ink-light);">
-                        * Required: ≥ 2 Girls & ≥ 2 Batches
+                        * Required: ≥ 1 Girl & ≥ 2 Batches
                     </span>
                 </div>
 
@@ -1966,10 +1966,10 @@ if ($pdo) {
             // 2. Female count pill
             var femaleRadios = membersGrid.querySelectorAll('.member-gender[value="Female"]:checked');
             var femaleCount = femaleRadios.length;
-            if (femaleCount >= 2) {
-                setPillStatus(pillFemales, true, `✓ Female Quota: ${femaleCount} Girls (Met)`);
+            if (femaleCount >= 1) {
+                setPillStatus(pillFemales, true, `✓ Female Quota: ${femaleCount} Girl${femaleCount > 1 ? 's' : ''} (Met)`);
             } else {
-                setPillStatus(pillFemales, false, `Female Quota: ${femaleCount} / 2 Girls (Need ${2 - femaleCount} more)`);
+                setPillStatus(pillFemales, false, `Female Quota: 0 / 1 Girl (Need 1 more)`);
             }
 
             // 3. Batches count pill & format
@@ -2054,8 +2054,8 @@ if ($pdo) {
             if (totalCount < 4 || totalCount > 6) {
                 clientErrors.push('Every team must have between 4 and 6 members.');
             }
-            if (females < 2) {
-                clientErrors.push('Tournament rule requirement: Team must have at least 2 female players (girls).');
+            if (females < 1) {
+                clientErrors.push('Tournament rule requirement: Team must have at least 1 female player (girl).');
             }
             if (uniqueBatches.length < 2) {
                 clientErrors.push('Tournament rule requirement: Team must represent at least two distinct batches (e.g., 2022 and 2023).');
@@ -2116,7 +2116,7 @@ if ($pdo) {
                                 <p><strong>Tournament Verification:</strong></p>
                                 <ul class="receipt-list">
                                     <li>✓ <strong>Total Players:</strong> ${data.data.member_count} registered</li>
-                                    <li>✓ <strong>Female Quota:</strong> ${data.data.female_count} girls included</li>
+                                    <li>✓ <strong>Female Quota:</strong> ${data.data.female_count} girl${data.data.female_count == 1 ? '' : 's'} included</li>
                                     <li>✓ <strong>Batches Represented:</strong> ${data.data.batches.join(', ')}</li>
                                 </ul>
                                 <p style="font-size: 0.95rem; color: var(--ink-light); margin-top: 0.5rem;">
