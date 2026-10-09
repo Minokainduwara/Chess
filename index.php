@@ -26,6 +26,7 @@ if ($pdo) {
         $stmt_st = $pdo->query("
             SELECT id, team_name, played, won, drawn, lost, game_points, match_points, standing_notes
             FROM `teams`
+            WHERE `status` = 'approved'
             ORDER BY match_points DESC, game_points DESC, won DESC, id ASC
         ");
         $standings_teams = $stmt_st->fetchAll();
@@ -1793,7 +1794,7 @@ if ($countdown_enabled && $countdown_target !== '') {
             <span aria-hidden="true">♔</span> Official Team Registration
         </h2>
         <p class="reg-lead">
-            Register your squad for FOT Knights Arena 2026. Each team requires a minimum of 4 and a maximum of 6 registered students. Per tournament rules, every team <strong>must include at least 1 female player</strong> and <strong>represent at least two batches</strong>.
+            Register your squad for FOT Knights Arena 2026. Each team requires a minimum of 4 and a maximum of 6 registered students. Per tournament rules, every team <strong>must include at least 1 female player</strong> and <strong>represent at least two batches</strong>. All registrations are reviewed by the tournament organizer — your team will appear in the public Arena Standings only after <strong>admin approval</strong>.
         </p>
 
         <!-- Live Tournament Rules Compliance Bar -->
@@ -2241,13 +2242,13 @@ if ($countdown_enabled && $countdown_target !== '') {
                         <div class="receipt-card">
                             <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--ink); padding-bottom: 0.75rem;">
                                 <div>
-                                    <h3 class="receipt-title">♔ Team Registration Confirmed!</h3>
+                                    <h3 class="receipt-title">♔ Team Registration Submitted!</h3>
                                     <p style="color: var(--ink); font-size: 1.05rem;">
                                         <strong>Team: ${data.data.team_name}</strong> (Squad ID: #${data.data.team_id})
                                     </p>
                                 </div>
                                 <span style="background: var(--ink); color: var(--cream); padding: 0.25rem 0.75rem; font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">
-                                    Official Entry Recorded
+                                    Pending Admin Approval
                                 </span>
                             </div>
                             <div style="margin: 1.25rem 0; font-size: 1rem; line-height: 1.7; color: var(--ink);">
@@ -2256,9 +2257,10 @@ if ($countdown_enabled && $countdown_target !== '') {
                                     <li>✓ <strong>Total Players:</strong> ${data.data.member_count} registered</li>
                                     <li>✓ <strong>Female Quota:</strong> ${data.data.female_count} girl${data.data.female_count == 1 ? '' : 's'} included</li>
                                     <li>✓ <strong>Batches Represented:</strong> ${data.data.batches.join(', ')}</li>
+                                    <li>⏳ <strong>Status:</strong> Pending admin approval - the team appears in the Arena Standings once approved</li>
                                 </ul>
                                 <p style="font-size: 0.95rem; color: var(--ink-light); margin-top: 0.5rem;">
-                                    Your captain will receive round pairing alerts before Round 1. You may present your student ID at the registration desk on tournament day.
+                                    Your entry is awaiting organizer approval. Your captain will receive round pairing alerts before Round 1. You may present your student ID at the registration desk on tournament day.
                                 </p>
                             </div>
                             <div style="display: flex; gap: 1rem; margin-top: 1.25rem;">

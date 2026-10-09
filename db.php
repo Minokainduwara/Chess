@@ -35,6 +35,7 @@ try {
             `team_name` VARCHAR(150) NOT NULL UNIQUE,
             `contact_phone` VARCHAR(50) DEFAULT NULL,
             `contact_email` VARCHAR(150) DEFAULT NULL,
+            `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
             `played` INT DEFAULT 0,
             `won` INT DEFAULT 0,
             `drawn` INT DEFAULT 0,
@@ -84,6 +85,32 @@ try {
             ADD COLUMN IF NOT EXISTS `tiebreak_sb` DECIMAL(6,2) DEFAULT 0.00,
             ADD COLUMN IF NOT EXISTS `standing_notes` VARCHAR(100) DEFAULT NULL;
     ");
+
+    // Approval workflow: newly registered teams get status 'pending' and stay
+    // hidden from the public standings until an admin approves them.
+    $status_col_exists = false;
+    try {
+        $stmt_col = $pdo->query("
+            SELECT COUNT(*) FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'teams'
+              AND COLUMN_NAME = 'status'
+        ");
+        $status_col_exists = ((int)$stmt_col->fetchColumn()) > 0;
+    } catch (PDOException $e) {
+        $status_col_exists = false;
+    }
+
+    $pdo->exec("
+        ALTER TABLE `teams`
+            ADD COLUMN IF NOT EXISTS `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending' AFTER `contact_email`;
+    ");
+
+    // One-time upgrade: teams registered before this feature existed are
+    // grandfathered in as 'approved' so they stay visible in standings.
+    if (!$status_col_exists) {
+        $pdo->exec("UPDATE `teams` SET `status` = 'approved'");
+    }
 
     // Seed default settings
     $pdo->exec("

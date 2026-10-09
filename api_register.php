@@ -167,9 +167,10 @@ if (!empty($errors)) {
 try {
     $pdo->beginTransaction();
 
+    // New teams start as 'pending': hidden from public standings until approved.
     $stmt_team = $pdo->prepare("
-        INSERT INTO `teams` (`team_name`, `contact_phone`, `contact_email`) 
-        VALUES (?, ?, ?)
+        INSERT INTO `teams` (`team_name`, `contact_phone`, `contact_email`, `status`) 
+        VALUES (?, ?, ?, 'pending')
     ");
     $stmt_team->execute([$team_name, $contact_phone, $contact_email]);
     $team_id = (int)$pdo->lastInsertId();
@@ -194,10 +195,11 @@ try {
     $pdo->commit();
 
     $response['success'] = true;
-    $response['message'] = "Team '{$team_name}' registered successfully with {$member_count} members!";
+    $response['message'] = "Team '{$team_name}' submitted with {$member_count} members! Your registration is pending admin approval - it will appear in the Arena Standings once approved.";
     $response['data'] = [
         'team_id'         => $team_id,
         'team_name'       => $team_name,
+        'status'          => 'pending',
         'member_count'    => $member_count,
         'female_count'    => $female_count,
         'male_count'      => $male_count,

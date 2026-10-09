@@ -7,11 +7,16 @@ CREATE DATABASE IF NOT EXISTS `chess_tournament`
 USE `chess_tournament`;
 
 -- 1. Teams Table
+-- teams.status lifecycle:
+--   'pending'  (default) - hidden from public standings until admin approval
+--   'approved'           - listed in the public standings
+--   'rejected'           - hidden from public standings
 CREATE TABLE IF NOT EXISTS `teams` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `team_name` VARCHAR(150) NOT NULL UNIQUE,
   `contact_phone` VARCHAR(50) DEFAULT NULL,
   `contact_email` VARCHAR(150) DEFAULT NULL,
+  `status` ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
   `played` INT DEFAULT 0,
   `won` INT DEFAULT 0,
   `drawn` INT DEFAULT 0,

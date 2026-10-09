@@ -121,6 +121,35 @@ if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_
     exit;
 }
 
+// Handle AJAX Team Moderation (approve/reject registered teams)
+if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], array('approve_team', 'reject_team'), true)) {
+    header('Content-Type: application/json; charset=utf-8');
+    $mod_team_id = (int)($_POST['team_id'] ?? 0);
+    if (!$pdo || $mod_team_id <= 0) {
+        echo json_encode(array('success' => false, 'error' => 'Invalid request.'));
+        exit;
+    }
+    $stmt_mod_chk = $pdo->prepare("SELECT `status` FROM `teams` WHERE `id` = ?");
+    $stmt_mod_chk->execute(array($mod_team_id));
+    $cur_status = $stmt_mod_chk->fetchColumn();
+    if ($cur_status === false) {
+        echo json_encode(array('success' => false, 'error' => 'Team not found.'));
+        exit;
+    }
+    $new_status = ($_POST['action'] === 'approve_team') ? 'approved' : 'rejected';
+    $stmt_mod = $pdo->prepare("UPDATE `teams` SET `status` = ? WHERE `id` = ?");
+    $stmt_mod->execute(array($new_status, $mod_team_id));
+    echo json_encode(array(
+        'success' => true,
+        'team_id' => $mod_team_id,
+        'status'  => $new_status,
+        'message' => ($new_status === 'approved')
+            ? 'Team approved and published to the public standings.'
+            : 'Team rejected; it will not appear in the public standings.'
+    ));
+    exit;
+}
+
 // Handle Standings & Scoreboard Update POST
 if ($is_authenticated && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_standings_action'])) {
     if ($pdo) {
@@ -204,6 +233,7 @@ if ($is_authenticated && isset($_GET['action']) && $_GET['action'] === 'export_c
                 t.team_name,
                 t.contact_phone,
                 t.contact_email,
+                t.status,
                 t.created_at,
                 m.member_order,
                 m.name AS member_name,
@@ -222,6 +252,7 @@ if ($is_authenticated && isset($_GET['action']) && $_GET['action'] === 'export_c
                 $row['team_name'],
                 $row['contact_phone'] ?? 'N/A',
                 $row['contact_email'] ?? 'N/A',
+                $row['status'] ?? 'pending',
                 $row['created_at'],
                 $row['member_order'],
                 $row['member_name'],
@@ -239,6 +270,7 @@ if ($is_authenticated && isset($_GET['action']) && $_GET['action'] === 'export_c
 // Fetch dashboard data if authenticated
 $teams_data = [];
 $total_teams = 0;
+$pending_teams = 0;
 $total_players = 0;
 $total_females = 0;
 $total_males = 0;
@@ -251,6 +283,7 @@ $countdown_target  = '2026-10-10 07:00:00';
 if ($is_authenticated && $pdo) {
     // Stats
     $total_teams = (int)$pdo->query("SELECT COUNT(*) FROM `teams`")->fetchColumn();
+    $pending_teams = (int)$pdo->query("SELECT COUNT(*) FROM `teams` WHERE `status` = 'pending'")->fetchColumn();
     $total_players = (int)$pdo->query("SELECT COUNT(*) FROM `members`")->fetchColumn();
     $total_females = (int)$pdo->query("SELECT COUNT(*) FROM `members` WHERE `gender` = 'Female'")->fetchColumn();
     $total_males = (int)$pdo->query("SELECT COUNT(*) FROM `members` WHERE `gender` = 'Male'")->fetchColumn();
@@ -275,7 +308,8 @@ if ($is_authenticated && $pdo) {
 
     $stmt_st = $pdo->query("
         SELECT id, team_name, played, won, drawn, lost, game_points, match_points, standing_notes 
-        FROM `teams` 
+        FROM `teams`
+        WHERE `status` = 'approved'
         ORDER BY match_points DESC, game_points DESC, won DESC, id ASC
     ");
     $standings_teams = $stmt_st->fetchAll();
@@ -289,7 +323,8 @@ if ($is_authenticated && $pdo) {
             t.id, 
             t.team_name, 
             t.contact_phone, 
-            t.contact_email, 
+            t.contact_email,
+            t.status,
             t.created_at,
             t.played,
             t.won,
@@ -976,6 +1011,10 @@ if ($is_authenticated && $pdo) {
                     <div class="stat-num"><?= $total_females ?> <span style="font-size: 1.15rem; font-weight: normal; color: var(--ink-muted);">(<?= $total_players > 0 ? round(($total_females / $total_players) * 100) : 0 ?>%)</span></div>
                     <div class="stat-label">Female Players (Girls)</div>
                 </div>
+                <div class="stat-card" style="border-color: #E65100; background: #FFF3E0;">
+                    <div class="stat-num" style="color: #BF360C;"><?= $pending_teams ?></div>
+                    <div class="stat-label" style="color: #BF360C;">&#9203; Pending Approval</div>
+                </div>
             </div>
 
             <!-- ═══ SCOREBOARD & STANDINGS MANAGER ═══ -->
@@ -1275,6 +1314,13 @@ if ($is_authenticated && $pdo) {
                 </div>
             </div>
 
+            <?php if ($pending_teams > 0): ?>
+                <div class="alert" style="border-left: 4px solid #E65100; background: #FFF3E0; color: #BF360C;">
+                    <strong>&#9203; <?= $pending_teams ?> team<?= $pending_teams == 1 ? '' : 's' ?> awaiting approval.</strong>
+                    New registrations stay hidden from the public standings until you approve them below.
+                </div>
+            <?php endif; ?>
+
             <!-- Teams Listing -->
             <?php if (empty($teams_data)): ?>
                 <div class="alert" style="text-align: center; padding: 3rem 1rem;">
@@ -1291,6 +1337,14 @@ if ($is_authenticated && $pdo) {
                             <div class="team-title-group">
                                 <span style="font-family: var(--font-display); font-weight: 700; color: var(--red); font-size: 1.25rem;">#<?= htmlspecialchars($team['id']) ?></span>
                                 <span class="team-name"><?= htmlspecialchars($team['team_name']) ?></span>
+                                <?php $team_status = $team['status'] ?? 'pending'; ?>
+                                <?php if ($team_status === 'approved'): ?>
+                                    <span class="badge badge-green">&#10003; Approved</span>
+                                <?php elseif ($team_status === 'rejected'): ?>
+                                    <span class="badge" style="background: #FFEBEE; color: #C0392B; border: 1px solid #FFCDD2; font-weight: 700;">&#10007; Rejected</span>
+                                <?php else: ?>
+                                    <span class="badge" style="background: #FFF3E0; color: #BF360C; border: 1px solid #FFCC80; font-weight: 700;">&#9203; Pending Approval</span>
+                                <?php endif; ?>
                                 <span class="badge" style="background: #FFF9C4; color: #5D4037; border: 1px solid #FFE082; font-weight: 700; font-size: 0.85rem;">
                                     ♟ P: <?= (int)$team['played'] ?> · W: <?= (int)$team['won'] ?> · D: <?= (int)$team['drawn'] ?> · L: <?= (int)$team['lost'] ?> · GP: <?= number_format((float)$team['game_points'], 1) ?> · MP: <?= (int)$team['match_points'] ?>
                                 </span>
@@ -1363,6 +1417,14 @@ if ($is_authenticated && $pdo) {
                             <div>
                                 Registered on <?= date('F j, Y, g:i a', strtotime($team['created_at'])) ?>
                             </div>
+                            <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+                                <?php if (($team['status'] ?? 'pending') !== 'approved'): ?>
+                                    <button type="button" class="btn-action" style="background: #2E7D32; color: #F5F0E0; border-color: #2E7D32;" onclick="moderateTeam(<?= (int)$team['id'] ?>, 'approve_team', this)">&#10003; Approve for Standings</button>
+                                <?php endif; ?>
+                                <?php if (($team['status'] ?? 'pending') === 'pending'): ?>
+                                    <button type="button" class="btn-action" style="background: #C0392B; color: #F5F0E0; border-color: #C0392B;" onclick="moderateTeam(<?= (int)$team['id'] ?>, 'reject_team', this)">&#10007; Reject</button>
+                                <?php endif; ?>
+                            </div>
                             <form method="POST" action="admin.php" onsubmit="return confirm('Are you sure you want to delete team \'<?= htmlspecialchars(addslashes($team['team_name'])) ?>\'? This action cannot be undone.');">
                                 <input type="hidden" name="delete_team_id" value="<?= $team['id'] ?>">
                                 <button type="submit" class="btn-delete">Delete Team</button>
@@ -1392,6 +1454,25 @@ if ($is_authenticated && $pdo) {
                 mp.value = (w * 2) + d;
             }
         });
+    }
+
+    function moderateTeam(teamId, action, btn) {
+        var isApprove = action === 'approve_team';
+        var confirmMsg = isApprove
+            ? 'Approve this team? It will immediately appear in the public Arena Standings.'
+            : 'Reject this team? It will stay hidden from the public standings.';
+        if (!confirm(confirmMsg)) return;
+        if (btn) btn.disabled = true;
+        var fd = new FormData();
+        fd.append('action', action);
+        fd.append('team_id', teamId);
+        fetch('admin.php', { method: 'POST', body: fd })
+            .then(function(res) { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
+            .then(function(data) {
+                if (data.success) { location.reload(); }
+                else { alert(data.error || 'Failed to update team status.'); if (btn) btn.disabled = false; }
+            })
+            .catch(function() { alert('Network error while updating team status. Please try again.'); if (btn) btn.disabled = false; });
     }
 
     function toggleScoreboardVisibility(forcedVal) {
