@@ -28,7 +28,7 @@ if ($pdo) {
             SELECT id, team_name, played, won, drawn, lost, game_points, match_points, standing_notes
             FROM `teams`
             WHERE `status` = 'approved'
-            ORDER BY match_points DESC, game_points DESC, won DESC, id ASC
+            ORDER BY match_points DESC, game_points DESC, tiebreak_sb DESC, id ASC
         ");
         $standings_teams = $stmt_st->fetchAll();
     }
@@ -44,6 +44,42 @@ if ($pdo) {
                 $countdown_label = "Countdown to " . $active_round['label'];
             }
         }
+    }
+
+    // Fetch all public matches
+    $stmt_pub_m = $pdo->query("SELECT m.*, t1.team_name as ta_name, t2.team_name as tb_name FROM `matches` m JOIN `teams` t1 ON m.team_a_id = t1.id JOIN `teams` t2 ON m.team_b_id = t2.id WHERE m.status IN ('scheduled', 'completed') ORDER BY m.round_number ASC, m.id ASC");
+    $public_matches = [];
+    if ($stmt_pub_m) {
+        while ($row = $stmt_pub_m->fetch()) {
+            $public_matches[$row['round_number']][] = $row;
+        }
+    }
+
+    // Fetch individual player standings
+    $stmt_indiv = $pdo->query("
+        SELECT m.id, m.name, t.team_name,
+               SUM(CASE
+                   WHEN mb.result = '1-0' AND mb.team_a_member_id = m.id THEN 1
+                   WHEN mb.result = '0-1' AND mb.team_b_member_id = m.id THEN 1
+                   WHEN mb.result = '0.5-0.5' AND (mb.team_a_member_id = m.id OR mb.team_b_member_id = m.id) THEN 0.5
+                   ELSE 0
+               END) as individual_score
+        FROM `members` m
+        JOIN `teams` t ON m.team_id = t.id
+        LEFT JOIN `match_boards` mb ON (mb.team_a_member_id = m.id OR mb.team_b_member_id = m.id)
+        GROUP BY m.id
+        ORDER BY individual_score DESC, m.name ASC
+    ");
+    $individual_standings = [];
+    if ($stmt_indiv) {
+        $individual_standings = $stmt_indiv->fetchAll();
+    }
+
+    // Fetch round schedules
+    $stmt_sched = $pdo->query("SELECT * FROM `rounds` ORDER BY `round_number` ASC");
+    $schedule_rounds = [];
+    if ($stmt_sched) {
+        $schedule_rounds = $stmt_sched->fetchAll();
     }
 }
 
@@ -268,36 +304,27 @@ if ($countdown_enabled && $countdown_target !== '') {
             <span aria-hidden="true">⌖</span> Round Schedule
         </h2>
         <ol class="round-list">
-            <li class="round-item gtouch-tap">
-                <span class="round-number">1.</span>
-                <span class="round-date">10 Oct 2026</span>
-                <span class="round-time">09:00 – 10:30</span>
-                <span class="round-status round-status--active">Registration Open</span>
-            </li>
-            <li class="round-item gtouch-tap">
-                <span class="round-number">2.</span>
-                <span class="round-date">10 Oct 2026</span>
-                <span class="round-time">10:45 – 12:15</span>
-                <span class="round-status round-status--active">Registration Open</span>
-            </li>
-            <li class="round-item gtouch-tap">
-                <span class="round-number">3.</span>
-                <span class="round-date">10 Oct 2026</span>
-                <span class="round-time">13:00 – 14:30</span>
-                <span class="round-status round-status--active">Registration Open</span>
-            </li>
-            <li class="round-item gtouch-tap">
-                <span class="round-number">4.</span>
-                <span class="round-date">10 Oct 2026</span>
-                <span class="round-time">14:45 – 16:15</span>
-                <span class="round-status round-status--active">Registration Open</span>
-            </li>
-            <li class="round-item gtouch-tap">
-                <span class="round-number">5.</span>
-                <span class="round-date">10 Oct 2026</span>
-                <span class="round-time">16:30 – 18:00</span>
-                <span class="round-status round-status--active">Registration Open</span>
-            </li>
+            <?php if (!empty($schedule_rounds)): ?>
+                <?php foreach ($schedule_rounds as $r): ?>
+                    <li class="round-item gtouch-tap">
+                        <span class="round-number"><?= $r['round_number'] ?>.</span>
+                        <span class="round-date"><?= htmlspecialchars($r['schedule_date'] ?? '10 Oct 2026') ?></span>
+                        <span class="round-time"><?= htmlspecialchars($r['schedule_time'] ?? '09:00 – 10:30') ?></span>
+                        <?php
+                        $status_class = "round-status";
+                        if ($r['status'] === 'open') $status_class .= " round-status--active";
+                        ?>
+                        <span class="<?= $status_class ?>"><?= htmlspecialchars($r['schedule_status'] ?? 'Scheduled') ?></span>
+                    </li>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <li class="round-item gtouch-tap">
+                    <span class="round-number">-</span>
+                    <span class="round-date">TBD</span>
+                    <span class="round-time">TBD</span>
+                    <span class="round-status">Schedule Pending</span>
+                </li>
+            <?php endif; ?>
         </ol>
     </section>
 
@@ -380,10 +407,155 @@ if ($countdown_enabled && $countdown_target !== '') {
             </table>
         </div>
         <p style="font-size: 0.85rem; color: var(--ink-light); margin-top: 0.75rem;">
-            * P: Played, W: Won, D: Drawn, L: Lost, GP: Game Points (total individual board points), MP: Match Points (Win = 2 pts, Draw = 1 pt).
+            * P: Played, W: Won, D: Drawn, L: Lost, GP: Game Points (total individual board points), MP: Match Points (Win = 2 pts, Draw = 1 pt, Loss = 0 pts, Loss with 0 GP = -1 pt).
         </p>
     </section>
     <?php endif; ?>
+
+    <div class="page-rail"><hr class="section-rule--light section-rule"></div>
+
+    <!-- ═══ INDIVIDUAL STANDINGS ═══ -->
+    <section class="standings page-rail" id="individual-standings" aria-labelledby="indiv-heading">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 2rem;">
+            <h2 class="standings-heading" id="indiv-heading" style="margin-bottom: 0;">
+                <span aria-hidden="true">🎖️</span> Individual Player Standings
+            </h2>
+        </div>
+        <div class="standings-table-wrap gtouch-swipe">
+            <table class="standings-table" id="indivTable">
+                <thead>
+                    <tr>
+                        <th style="width: 70px;">Rank</th>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th style="text-align: center; width: 80px;">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="indivBody">
+                    <!-- populated by js -->
+                </tbody>
+            </table>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+            <button id="prevIndivBtn" class="btn-primary" style="padding: 5px 15px; border-radius: 4px; font-weight: bold; background: var(--ink); color: #fff; cursor: pointer; border: none;" disabled>&larr; Prev</button>
+            <span id="indivPageInfo" style="font-weight: 600; color: var(--ink-light);">Page 1</span>
+            <button id="nextIndivBtn" class="btn-primary" style="padding: 5px 15px; border-radius: 4px; font-weight: bold; background: var(--ink); color: #fff; cursor: pointer; border: none;">Next &rarr;</button>
+        </div>
+        <script>
+            const indivData = <?php echo json_encode($individual_standings); ?>;
+            let indivPage = 0;
+            const indivPerPage = 10;
+            
+            function renderIndivTable() {
+                const tbody = document.getElementById('indivBody');
+                tbody.innerHTML = '';
+                
+                if (!indivData || indivData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2.5rem 1rem; color: var(--ink-light);"><span style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem;">♟️</span>Official player rankings will update here.</td></tr>';
+                    document.getElementById('prevIndivBtn').style.display = 'none';
+                    document.getElementById('nextIndivBtn').style.display = 'none';
+                    document.getElementById('indivPageInfo').style.display = 'none';
+                    return;
+                }
+                
+                const start = indivPage * indivPerPage;
+                const end = Math.min(start + indivPerPage, indivData.length);
+                
+                for (let i = start; i < end; i++) {
+                    const row = indivData[i];
+                    const rank = i + 1;
+                    let rankHtml = `<span class="rank-num">${rank}</span>`;
+                    if (rank === 1) rankHtml = `<span class="rank-badge rank-gold">♔ 1</span>`;
+                    else if (rank === 2) rankHtml = `<span class="rank-badge rank-silver">♕ 2</span>`;
+                    else if (rank === 3) rankHtml = `<span class="rank-badge rank-bronze">♗ 3</span>`;
+                    
+                    const tr = document.createElement('tr');
+                    if (rank <= 3) tr.className = `rank-podium rank-${rank} gtouch-tap`;
+                    else tr.className = 'gtouch-tap';
+                    
+                    tr.innerHTML = `
+                        <td>${rankHtml}</td>
+                        <td style="font-weight: 600; font-size: 1.05rem;">${row.name}</td>
+                        <td style="color: var(--ink-light); font-weight: 500;">${row.team_name}</td>
+                        <td style="text-align: center; font-weight: 600; color: var(--ink);">${parseFloat(row.individual_score || 0).toFixed(1)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+                
+                const prevBtn = document.getElementById('prevIndivBtn');
+                const nextBtn = document.getElementById('nextIndivBtn');
+                
+                prevBtn.disabled = indivPage === 0;
+                prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+                prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
+                
+                nextBtn.disabled = end >= indivData.length;
+                nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+                nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
+                
+                document.getElementById('indivPageInfo').textContent = `Showing ${start + 1} - ${end} of ${indivData.length}`;
+            }
+            
+            document.getElementById('prevIndivBtn').addEventListener('click', () => {
+                if (indivPage > 0) { indivPage--; renderIndivTable(); }
+            });
+            document.getElementById('nextIndivBtn').addEventListener('click', () => {
+                if ((indivPage + 1) * indivPerPage < indivData.length) { indivPage++; renderIndivTable(); }
+            });
+            
+            renderIndivTable();
+        </script>
+    </section>
+
+    <div class="page-rail"><hr class="section-rule--light section-rule"></div>
+
+    <!-- ═══ PAIRINGS & RESULTS ═══ -->
+    <section class="standings page-rail" id="pairings" aria-labelledby="pairings-heading">
+        <h2 class="standings-heading" id="pairings-heading">
+            <span aria-hidden="true">⚔️</span> Pairings & Results
+        </h2>
+        
+        <?php if (empty($public_matches)): ?>
+            <div class="card" style="text-align: center; padding: 2.5rem 1rem; color: var(--ink-light); margin-bottom: 2rem;">
+                <span style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem;">♟️</span>
+                Pairings will be published here once the tournament begins.
+            </div>
+        <?php else: ?>
+            <?php foreach ($public_matches as $r_num => $matches): ?>
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="border-bottom: 2px solid var(--checker); padding-bottom: 5px; margin-bottom: 1rem; font-family: var(--font-display);">Round <?= $r_num ?></h3>
+                    <div class="table-responsive">
+                        <table class="standings-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40%; text-align: right;">White (Team A)</th>
+                                    <th style="width: 20%; text-align: center;">Result</th>
+                                    <th style="width: 40%; text-align: left;">Black (Team B)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($matches as $m): ?>
+                                    <tr>
+                                        <td style="text-align: right; font-weight: 600;"><?= htmlspecialchars($m['ta_name']) ?></td>
+                                        <td style="text-align: center;">
+                                            <?php if ($m['status'] == 'completed'): ?>
+                                                <span class="mp-badge" style="background: var(--ink); color: #fff; display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: bold; letter-spacing: 1px;">
+                                                    <?= $m['team_a_gp'] ?> - <?= $m['team_b_gp'] ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span style="color: var(--ink-light); font-weight: bold; font-family: var(--font-display); padding: 4px 10px;">- vs -</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="text-align: left; font-weight: 600;"><?= htmlspecialchars($m['tb_name']) ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </section>
 
     <div class="page-rail"><hr class="section-rule--light section-rule"></div>
 
@@ -395,27 +567,27 @@ if ($countdown_enabled && $countdown_target !== '') {
         <div class="rules-grid">
             <div class="rule-entry gtouch-hover">
                 <span class="rule-move">1.</span>
-                <span class="rule-text">FIDE Laws of Chess apply to all games. Standard FIDE rules govern all play and disputes.</span>
+                <span class="rule-text">Tournament Format: 6-team Round-Robin. Every team plays exactly one match against every other team over 5 rounds.</span>
             </div>
             <div class="rule-entry gtouch-hover">
                 <span class="rule-move">2.</span>
-                <span class="rule-text">Round-robin format. Every team plays against all other participating teams in the championship.</span>
+                <span class="rule-text">Match Composition: Each match consists of exactly 4 boards. Teams with 5 or 6 members must submit drop boards before the round deadline, or reserve players will be dropped automatically.</span>
             </div>
             <div class="rule-entry gtouch-hover">
                 <span class="rule-move">3.</span>
-                <span class="rule-text">Time control: 25 minutes + 5 seconds increment per move. Rapid format throughout.</span>
+                <span class="rule-text">Scoring System: A match win earns 2 Match Points (MP), a draw earns 1 MP. A match loss earns 0 MP, however, a team losing all 4 boards (0 Game Points) will receive -1 MP.</span>
             </div>
             <div class="rule-entry gtouch-hover">
                 <span class="rule-move">4.</span>
-                <span class="rule-text">Touch-move rule is strictly enforced. Once a piece is touched, it must be moved if legal.</span>
+                <span class="rule-text">Tiebreaks: In the event of a tie in Match Points, standings are determined by Game Points, then Direct Encounter, and finally Sonneborn-Berger.</span>
             </div>
             <div class="rule-entry gtouch-hover">
                 <span class="rule-move">5.</span>
-                <span class="rule-text">Electronic devices must be switched off and kept away from the playing area during games.</span>
+                <span class="rule-text">Time control: 25 minutes + 5 seconds increment per move. Rapid format throughout.</span>
             </div>
             <div class="rule-entry gtouch-hover">
                 <span class="rule-move">6.</span>
-                <span class="rule-text">Tiebreaks: Buchholz, then Sonneborn-Berger, then direct encounter. Final standings use these criteria in order.</span>
+                <span class="rule-text">FIDE Laws of Chess apply to all games. Touch-move rule is strictly enforced, and electronic devices are prohibited in the playing area.</span>
             </div>
         </div>
     </section>

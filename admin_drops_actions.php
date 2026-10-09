@@ -58,9 +58,12 @@ if (isset($_POST['update_round_details'])) {
     $label = trim($_POST['label'] ?? '');
     $status = $_POST['status'];
     $deadline = $_POST['deadline'] ?: null;
+    $schedule_date = $_POST['schedule_date'] ?? null;
+    $schedule_time = $_POST['schedule_time'] ?? null;
+    $schedule_status = $_POST['schedule_status'] ?? null;
     
-    $stmt = $pdo->prepare("UPDATE `rounds` SET `label` = ?, `status` = ?, `deadline` = ? WHERE `round_number` = ?");
-    $stmt->execute([$label, $status, $deadline, $round_number]);
+    $stmt = $pdo->prepare("UPDATE `rounds` SET `label` = ?, `status` = ?, `deadline` = ?, `schedule_date` = ?, `schedule_time` = ?, `schedule_status` = ? WHERE `round_number` = ?");
+    $stmt->execute([$label, $status, $deadline, $schedule_date, $schedule_time, $schedule_status, $round_number]);
     $success_msg = "Round $round_number details updated successfully.";
 }
 

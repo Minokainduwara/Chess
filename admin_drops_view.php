@@ -40,7 +40,10 @@ $all_teams = $stmt_teams->fetchAll();
             <tr style="background: #f9f9f9;">
                 <th style="padding:8px; border:1px solid #ddd;">Round</th>
                 <th style="padding:8px; border:1px solid #ddd;">Label</th>
-                <th style="padding:8px; border:1px solid #ddd;">Status</th>
+                <th style="padding:8px; border:1px solid #ddd;">Date</th>
+                <th style="padding:8px; border:1px solid #ddd;">Time</th>
+                <th style="padding:8px; border:1px solid #ddd;">Status Text</th>
+                <th style="padding:8px; border:1px solid #ddd;">Open/Closed</th>
                 <th style="padding:8px; border:1px solid #ddd;">Deadline</th>
                 <th style="padding:8px; border:1px solid #ddd;">Action</th>
             </tr>
@@ -51,6 +54,15 @@ $all_teams = $stmt_teams->fetchAll();
                     <form method="POST" style="display:inline-flex; gap: 5px;">
                         <input type="hidden" name="round_number" value="<?= $r['round_number'] ?>">
                         <input type="text" name="label" value="<?= htmlspecialchars($r['label'] ?? "Round {$r['round_number']}") ?>" style="padding:4px; width: 100px;">
+                </td>
+                <td style="padding:8px; border:1px solid #ddd;">
+                        <input type="text" name="schedule_date" value="<?= htmlspecialchars($r['schedule_date'] ?? '10 Oct 2026') ?>" placeholder="10 Oct 2026" style="padding:4px; width: 90px;">
+                </td>
+                <td style="padding:8px; border:1px solid #ddd;">
+                        <input type="text" name="schedule_time" value="<?= htmlspecialchars($r['schedule_time'] ?? '09:00 – 10:30') ?>" placeholder="09:00 – 10:30" style="padding:4px; width: 100px;">
+                </td>
+                <td style="padding:8px; border:1px solid #ddd;">
+                        <input type="text" name="schedule_status" value="<?= htmlspecialchars($r['schedule_status'] ?? 'Scheduled') ?>" placeholder="Ongoing" style="padding:4px; width: 100px;">
                 </td>
                 <td style="padding:8px; border:1px solid #ddd;">
                     <select name="status" style="padding:4px;">

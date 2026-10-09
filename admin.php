@@ -1438,6 +1438,7 @@ if ($is_authenticated && $pdo) {
         <?php endif; ?>
 
         <?php require_once __DIR__ . '/admin_drops_view.php'; ?>
+        <?php require_once __DIR__ . '/admin_pairings.php'; ?>
 
     <?php endif; ?>
     <script>
@@ -1681,6 +1682,17 @@ if ($is_authenticated && $pdo) {
                 toggleCountdownVisibility(this.checked);
             });
         }
+        
+        // Maintain scroll position after form submissions/page reloads
+        var scrollpos = sessionStorage.getItem('scrollpos');
+        if (scrollpos) {
+            window.scrollTo(0, scrollpos);
+            sessionStorage.removeItem('scrollpos');
+        }
+    });
+
+    window.addEventListener("beforeunload", function(e) {
+        sessionStorage.setItem('scrollpos', window.scrollY);
     });
     </script>
 </body>
