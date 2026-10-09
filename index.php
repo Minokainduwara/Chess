@@ -1048,18 +1048,19 @@ if ($countdown_enabled && $countdown_target !== '') {
             margin-bottom: 0.35rem;
         }
 
-        /* ── Tournament Countdown ── */
+        /* ── Tournament Countdown (inside hero, under the title) ── */
         .countdown {
-            padding: 4rem 0;
+            margin: 1.5rem 0 2rem;
+            text-align: left;
         }
         .countdown-heading {
             font-family: var(--font-display);
             font-weight: 700;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             color: var(--red);
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -1067,37 +1068,28 @@ if ($countdown_enabled && $countdown_target !== '') {
         .countdown-heading::after {
             content: '';
             flex: 1;
-            height: 10px;
+            height: 8px;
             background: var(--checker);
             opacity: 0.9;
-        }
-        .countdown-lead {
-            font-family: var(--font-body);
-            font-size: 1.05rem;
-            color: var(--ink-light);
-            margin-bottom: 2rem;
-        }
-        .countdown-lead strong {
-            color: var(--ink);
-            font-weight: 600;
         }
         .countdown-grid {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 1rem;
-            max-width: 640px;
+            gap: 0.5rem;
+            width: 100%;
+            max-width: 100%;
         }
         .countdown-cell {
             background: var(--card);
             border: 1px solid var(--ink);
             border-top: 3px solid var(--ink);
-            padding: 1.25rem 0.75rem 1rem;
+            padding: 0.85rem 0.35rem 0.7rem;
             text-align: center;
         }
         .countdown-num {
             font-family: var(--font-display);
             font-weight: 700;
-            font-size: clamp(1.85rem, 5vw, 2.75rem);
+            font-size: clamp(1.35rem, 2.6vw, 1.85rem);
             line-height: 1;
             color: var(--ink);
             font-variant-numeric: tabular-nums;
@@ -1106,11 +1098,11 @@ if ($countdown_enabled && $countdown_target !== '') {
         .countdown-unit {
             font-family: var(--font-display);
             font-weight: 700;
-            font-size: 0.6875rem;
-            letter-spacing: 0.14em;
+            font-size: 0.625rem;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
             color: var(--ink-light);
-            margin-top: 0.6rem;
+            margin-top: 0.5rem;
             display: block;
         }
         /* Under one hour the clock turns red — like a chess clock flag falling */
@@ -1140,8 +1132,15 @@ if ($countdown_enabled && $countdown_target !== '') {
         }
         @media (max-width: 768px) {
             .countdown-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                max-width: 420px;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 0.4rem;
+            }
+            .countdown {
+                margin: 1.25rem 0 1.75rem;
+            }
+            .countdown-done {
+                font-size: 1.05rem;
+                padding: 0.7rem 1.15rem;
             }
         }
 
@@ -1501,6 +1500,20 @@ if ($countdown_enabled && $countdown_target !== '') {
                     Arena<br>
                     2026
                 </h1>
+                <?php if ($countdown_iso !== ''): ?>
+                <div class="countdown" id="countdown" data-target="<?= htmlspecialchars($countdown_iso, ENT_QUOTES) ?>">
+                    <h2 class="countdown-heading">
+                        <span aria-hidden="true">♜</span> Countdown to First Move
+                    </h2>
+                    <div class="countdown-grid" role="timer" aria-live="off">
+                        <div class="countdown-cell"><span class="countdown-num" id="cd-days">--</span><span class="countdown-unit">Days</span></div>
+                        <div class="countdown-cell"><span class="countdown-num" id="cd-hours">--</span><span class="countdown-unit">Hours</span></div>
+                        <div class="countdown-cell"><span class="countdown-num" id="cd-mins">--</span><span class="countdown-unit">Minutes</span></div>
+                        <div class="countdown-cell"><span class="countdown-num" id="cd-secs">--</span><span class="countdown-unit">Seconds</span></div>
+                    </div>
+                    <p class="countdown-sr" id="cd-sr" aria-live="polite"></p>
+                </div>
+                <?php endif; ?>
                 <p class="hero-subtitle">University of Ruhuna</p>
                 <a href="#register" class="hero-cta gtouch-ripple gtouch-long-press">
                     Register Now
@@ -1508,24 +1521,6 @@ if ($countdown_enabled && $countdown_target !== '') {
                     <span class="hero-cta-notation" aria-hidden="true">1.e4</span>
                 </a>
             </div>
-            <?php if ($countdown_iso !== ''): ?>
-            <div class="countdown page-rail" id="countdown" data-target="<?= htmlspecialchars($countdown_iso, ENT_QUOTES) ?>">
-                <h2 class="countdown-heading">
-                    <span aria-hidden="true">♜</span> Countdown to First Move
-                </h2>
-                <p class="countdown-lead">
-                    <strong>FOT Knights Arena</strong> — 10th October 2026, 7:00 AM ·
-                    7001 Hall, Faculty of Technology, University of Ruhuna
-                </p>
-                <div class="countdown-grid" role="timer" aria-live="off">
-                    <div class="countdown-cell"><span class="countdown-num" id="cd-days">--</span><span class="countdown-unit">Days</span></div>
-                    <div class="countdown-cell"><span class="countdown-num" id="cd-hours">--</span><span class="countdown-unit">Hours</span></div>
-                    <div class="countdown-cell"><span class="countdown-num" id="cd-mins">--</span><span class="countdown-unit">Minutes</span></div>
-                    <div class="countdown-cell"><span class="countdown-num" id="cd-secs">--</span><span class="countdown-unit">Seconds</span></div>
-                </div>
-                <p class="countdown-sr" id="cd-sr" aria-live="polite"></p>
-            </div>
-            <?php endif; ?>
             <div class="hero-board">
                 <div class="chess-diagram gtouch-hover" role="img" aria-label="Chess diagram showing a Sicilian Defense position">
                     <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
