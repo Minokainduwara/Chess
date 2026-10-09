@@ -40,6 +40,15 @@ if ($pdo) {
     
     <style>
         /* ── Font Loading ── */
+        /* Archivo Narrow — variable weight axis (400–700). Condensed sans used
+           as the tournament/scoreboard display face. */
+        @font-face {
+            font-family: 'Archivo Narrow';
+            src: url('fonts/ArchivoNarrow-Regular.woff2') format('woff2');
+            font-weight: 400 700;
+            font-style: normal;
+            font-display: swap;
+        }
         @font-face {
             font-family: 'Cormorant Garamond';
             src: url('fonts/CormorantGaramond.woff2') format('woff2');
@@ -63,22 +72,44 @@ if ($pdo) {
         }
 
         ::selection {
-            background: #C0392B;
-            color: #F5F0E0;
+            background: var(--ink);
+            color: var(--cream);
         }
 
         :root {
-            --cream: #F5F0E0;
-            --cream-dark: #EDE8D5;
-            --ink: #1A1A1A;
-            --ink-light: #4A4540;
-            --red: #C0392B;
-            --red-hover: #A03020;
-            --blue-ink: #2C3E50;
-            --rule: #C8C0AD;
-            --rule-light: #DAD3C2;
+            /* ══ Black & White Mono — chess tournament ═══════════════════════
+               The legacy token NAMES (--cream, --red, --ink …) are deliberately
+               kept so the existing var() references keep resolving; only their
+               VALUES have been re-mapped to the monochrome scheme. */
 
-            --font-display: 'Cormorant Garamond', 'Garamond', 'Times New Roman', serif;
+            /* Surfaces: white → light grey */
+            --cream: #FFFFFF;            /* base surface (page)      */
+            --cream-dark: #F4F4F5;       /* subtle fill              */
+            --card: #FAFAFA;             /* raised card surface      */
+
+            /* Ink: primary text + solid fills (the "black" pieces) */
+            --ink: #0A0A0A;
+            --ink-light: #52525B;        /* secondary text           */
+            --ink-muted: #71717A;        /* tertiary text            */
+
+            /* The single restrained accent — the tournament clock */
+            --red: #A93226;
+            --red-hover: #8C271E;
+            --accent: #A93226;
+            --accent-tint: #FCF3F2;
+
+            /* Hairlines */
+            --rule: #E4E4E7;
+            --rule-light: #EFEFF1;
+
+            /* The board — mono chessboard squares */
+            --board-light: #FFFFFF;
+            --board-dark: #D4D4D8;
+            --checker: repeating-conic-gradient(var(--ink) 0% 25%, #FFFFFF 0% 50%) 0 0 / 14px 14px;
+
+            --blue-ink: #52525B;         /* legacy token — now neutral */
+
+            --font-display: 'Archivo Narrow', 'Helvetica Neue', Arial, sans-serif;
             --font-body: 'EB Garamond', 'Georgia', serif;
 
             --page-max: 1180px;
@@ -97,12 +128,12 @@ if ($pdo) {
             font-weight: 400;
             line-height: 1.6;
             color: var(--ink);
-            background: linear-gradient(135deg, var(--cream) 0%, #f0e8d8 100%);
+            background: var(--cream);
             overflow-x: hidden;
             position: relative;
         }
         
-        /* Chess board background pattern */
+        /* Faint chessboard — the page itself reads as a board */
         body::before {
             content: '';
             position: fixed;
@@ -110,10 +141,11 @@ if ($pdo) {
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
-                linear-gradient(rgba(245, 240, 224, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(245, 240, 224, 0.1) 1px, transparent 1px);
-            background-size: 100px 100px;
+            background-image: repeating-conic-gradient(
+                rgba(10, 10, 10, 0.035) 0% 25%,
+                rgba(255, 255, 255, 0) 0% 50%
+            );
+            background-size: 72px 72px;
             pointer-events: none;
             z-index: -2;
         }
@@ -142,7 +174,7 @@ if ($pdo) {
         .floating-piece {
             position: absolute;
             font-size: 2rem;
-            opacity: 0.1;
+            opacity: 0.12;
             animation: pieceFloat 6s ease-in-out infinite;
             color: var(--ink);
         }
@@ -160,7 +192,7 @@ if ($pdo) {
             background: var(--cream-dark);
         }
         ::-webkit-scrollbar-thumb {
-            background: var(--rule);
+            background: var(--ink);
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
@@ -202,7 +234,7 @@ if ($pdo) {
         .header-seal {
             width: 42px;
             height: 42px;
-            border-radius: 50%;
+            border-radius: 0; /* square — a board square, not a coin */
             background: var(--ink);
             display: flex;
             align-items: center;
@@ -354,14 +386,17 @@ if ($pdo) {
             height: auto;
         }
 
-        /* ── Section divider ── */
+        /* ── Section divider — a checkerboard rank ── */
         .section-rule {
             border: none;
-            border-top: 1px solid var(--ink);
+            height: 10px;
             margin: 0;
+            background: var(--checker);
+            outline: 1px solid var(--ink);
+            outline-offset: -1px;
         }
         .section-rule--light {
-            border-top-color: var(--rule);
+            opacity: 0.45;
         }
 
         /* ── Event Details (Annotation columns) ── */
@@ -383,8 +418,9 @@ if ($pdo) {
         .details-heading::after {
             content: '';
             flex: 1;
-            height: 1px;
-            background: var(--rule);
+            height: 10px;
+            background: var(--checker);
+            opacity: 0.9;
         }
         .details-grid {
             display: grid;
@@ -441,8 +477,9 @@ if ($pdo) {
         .schedule-heading::after {
             content: '';
             flex: 1;
-            height: 1px;
-            background: var(--rule);
+            height: 10px;
+            background: var(--checker);
+            opacity: 0.9;
         }
         .round-list {
             list-style: none;
@@ -510,22 +547,29 @@ if ($pdo) {
             align-items: center;
             gap: 0.5rem;
         }
+        .standings-heading::after {
+            content: '';
+            flex: 1;
+            height: 10px;
+            background: var(--checker);
+            opacity: 0.9;
+        }
         .standings-status-badge {
             font-family: var(--font-display);
             font-size: 0.85rem;
             font-weight: 700;
             letter-spacing: 0.05em;
             text-transform: uppercase;
-            color: #1E6B23;
-            background: #E8F5E9;
+            color: var(--cream);
+            background: var(--ink);
             padding: 0.25rem 0.65rem;
-            border: 1px solid #A5D6A7;
+            border: 1px solid var(--ink);
             border-radius: 2px;
         }
         .standings-table-wrap {
             overflow-x: auto;
             border: 1px solid var(--ink);
-            background: #FAF7EE;
+            background: var(--card);
             margin-top: 1rem;
         }
         .standings-table {
@@ -541,7 +585,7 @@ if ($pdo) {
             letter-spacing: 0.06em;
             text-transform: uppercase;
             color: var(--ink);
-            background: #EDE6D2;
+            background: var(--cream-dark);
             padding: 0.85rem 1rem;
             border-bottom: 2px solid var(--ink);
             text-align: left;
@@ -553,10 +597,10 @@ if ($pdo) {
             vertical-align: middle;
         }
         .standings-table tbody tr:hover td {
-            background: #FFFDF8;
+            background: var(--card);
         }
         .rank-podium td {
-            background: #FCFBF7;
+            background: var(--cream-dark);
         }
         .rank-badge {
             display: inline-flex;
@@ -569,20 +613,21 @@ if ($pdo) {
             border-radius: 2px;
             letter-spacing: 0.04em;
         }
+        /* Mono podium — 1st solid black, 2nd outlined, 3rd grey */
         .rank-gold {
-            background: #FFF8E1;
-            color: #B78103;
-            border: 1px solid #FFE082;
+            background: var(--ink);
+            color: var(--cream);
+            border: 1px solid var(--ink);
         }
         .rank-silver {
-            background: #ECEFF1;
-            color: #455A64;
-            border: 1px solid #CFD8DC;
+            background: var(--cream);
+            color: var(--ink);
+            border: 1px solid var(--ink);
         }
         .rank-bronze {
-            background: #EFEBE9;
-            color: #6D4C41;
-            border: 1px solid #D7CCC8;
+            background: var(--cream-dark);
+            color: var(--ink);
+            border: 1px solid var(--rule);
         }
         .rank-num {
             font-family: var(--font-display);
@@ -607,8 +652,8 @@ if ($pdo) {
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            background: #E3F2FD;
-            color: #1565C0;
+            background: var(--cream-dark);
+            color: var(--ink-light);
             padding: 0.2rem 0.5rem;
             border-radius: 2px;
         }
@@ -632,8 +677,9 @@ if ($pdo) {
         .rules-heading::after {
             content: '';
             flex: 1;
-            height: 1px;
-            background: var(--rule);
+            height: 10px;
+            background: var(--checker);
+            opacity: 0.9;
         }
         .rules-grid {
             display: grid;
@@ -680,8 +726,9 @@ if ($pdo) {
         .reg-heading::after {
             content: '';
             flex: 1;
-            height: 1px;
-            background: var(--rule);
+            height: 10px;
+            background: var(--checker);
+            opacity: 0.9;
         }
         .reg-lead {
             font-family: var(--font-body);
@@ -693,7 +740,7 @@ if ($pdo) {
 
         /* ── Live Compliance Checklist ── */
         .compliance-bar {
-            background: #EDE6D2;
+            background: var(--cream-dark);
             border: 1px solid var(--rule);
             padding: 1.25rem 1.5rem;
             margin-bottom: 2.5rem;
@@ -725,19 +772,19 @@ if ($pdo) {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #B0A795;
+            background: #A1A1AA;
             display: inline-block;
             transition: background 0.2s ease;
         }
         .compliance-pill.valid {
-            color: #1E6B23;
+            color: var(--ink);
             font-weight: 600;
         }
         .compliance-pill.valid .pill-dot {
-            background: #2E7D32;
+            background: var(--ink);
         }
         .compliance-pill.invalid {
-            color: #922B21;
+            color: var(--red);
         }
         .compliance-pill.invalid .pill-dot {
             background: var(--red);
@@ -781,7 +828,7 @@ if ($pdo) {
         .input-field {
             padding: 0.75rem 0.9rem;
             border: 1px solid var(--rule);
-            background: #FFFFFF;
+            background: var(--cream);
             font-family: var(--font-body);
             font-size: 1.05rem;
             color: var(--ink);
@@ -791,7 +838,7 @@ if ($pdo) {
         .input-field:focus {
             outline: none;
             border-color: var(--red);
-            box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.12);
+            box-shadow: 0 0 0 2px rgba(169, 50, 38, 0.12);
         }
         .input-hint {
             font-size: 0.82rem;
@@ -807,7 +854,7 @@ if ($pdo) {
             margin-bottom: 1.5rem;
         }
         .member-card {
-            background: #FAF7EE;
+            background: var(--card);
             border: 1px solid var(--rule);
             padding: 1.35rem 1.5rem;
             position: relative;
@@ -816,7 +863,7 @@ if ($pdo) {
         }
         .member-card.is-captain {
             border-left-color: var(--red);
-            background: #FCF9F2;
+            background: var(--card);
         }
         .member-card-header {
             display: flex;
@@ -881,8 +928,8 @@ if ($pdo) {
             font-weight: 700;
             font-size: 0.8rem;
             padding: 0.15rem 0.45rem;
-            background: #E3F2FD;
-            color: #1565C0;
+            background: var(--cream-dark);
+            color: var(--ink-light);
             margin-left: 0.5rem;
             border-radius: 2px;
         }
@@ -913,7 +960,7 @@ if ($pdo) {
             transition: all 0.2s ease;
         }
         .btn-add-member:hover {
-            background: #EDE6D2;
+            background: var(--cream-dark);
             border-style: solid;
         }
         .btn-add-member:disabled {
@@ -940,7 +987,7 @@ if ($pdo) {
             transform: translateY(-1px);
         }
         .btn-submit-reg:disabled {
-            background: #A0988A;
+            background: #A1A1AA;
             cursor: not-allowed;
             transform: none;
         }
@@ -954,15 +1001,15 @@ if ($pdo) {
             display: block;
         }
         .receipt-card {
-            background: #F1F8F1;
-            border: 2px solid #2E7D32;
+            background: var(--card);
+            border: 2px solid var(--ink);
             padding: 2rem;
             margin-top: 1.5rem;
         }
         .receipt-title {
             font-family: var(--font-display);
             font-size: 1.75rem;
-            color: #1E6B23;
+            color: var(--ink);
             margin-bottom: 0.5rem;
         }
         .receipt-list {
@@ -1078,7 +1125,7 @@ if ($pdo) {
         /* Enhanced header with scroll effect */
         .site-header.scrolled {
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-            background: rgba(245, 240, 224, 0.98);
+            background: rgba(255, 255, 255, 0.98);
         }
         
         /* Enhanced hero section */
@@ -1094,7 +1141,7 @@ if ($pdo) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(ellipse at center, transparent 0%, rgba(192, 57, 43, 0.05) 100%);
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(10, 10, 10, 0.05) 100%);
             pointer-events: none;
         }
         .hero-copy { animation: fadeInUp 0.8s ease-out; }
@@ -1129,7 +1176,7 @@ if ($pdo) {
         /* Enhanced chess diagram */
         .chess-diagram {
             border: 3px solid var(--ink);
-            border-radius: 8px;
+            border-radius: 0; /* square frame, like a real board */
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
@@ -1144,7 +1191,7 @@ if ($pdo) {
             cursor: pointer;
         }
         .round-item:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(10, 10, 10, 0.04);
             transform: translateX(5px);
         }
         .round-item:hover .round-number {
@@ -1169,16 +1216,16 @@ if ($pdo) {
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
         }
         .input-field:focus { transform: translateY(-2px); }
-        .btn-remove-member:hover { background: rgba(192, 57, 43, 0.1); transform: scale(1.05); }
+        .btn-remove-member:hover { background: rgba(169, 50, 38, 0.1); transform: scale(1.05); }
         
         .compliance-pill {
             padding: 0.5rem 1rem;
-            border-radius: 20px;
+            border-radius: 2px;
             transition: all 0.3s ease;
         }
         .compliance-pill:hover { transform: scale(1.05); }
         
-        .footer-cta:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(192, 57, 43, 0.3); }
+        .footer-cta:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(169, 50, 38, 0.3); }
         
         /* Loading spinner for forms */
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -1341,8 +1388,8 @@ if ($pdo) {
                     <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
                         <!-- Board squares -->
                         <?php
-                        $lightSq = '#F5F0E0';
-                        $darkSq  = '#B8A88A';
+                        $lightSq = '#FFFFFF';
+                        $darkSq  = '#D4D4D8';
                         for ($row = 0; $row < 8; $row++) {
                             for ($col = 0; $col < 8; $col++) {
                                 $x = $col * 50;
@@ -1376,8 +1423,11 @@ if ($pdo) {
                         foreach ($pieces as [$piece, $col, $row]) {
                             $x = $col * 50 + 25;
                             $y = $row * 50 + 35;
-                            $color = in_array($piece, ['♜','♞','♝','♛','♚','♟']) ? '#1A1A1A' : '#5A5045';
-                            echo "<text x=\"$x\" y=\"$y\" text-anchor=\"middle\" font-size=\"36\" fill=\"$color\" font-family=\"serif\" class=\"chess-piece-drag\">$piece</text>\n";
+                            $isBlack = in_array($piece, ['♜','♞','♝','♛','♚','♟']);
+                            $color = $isBlack ? '#0A0A0A' : '#FFFFFF';
+                            // White pieces get a black stroke so they read on light squares
+                            $stroke = $isBlack ? 'stroke="none"' : 'stroke="#0A0A0A" stroke-width="1.2"';
+                            echo "<text x=\"$x\" y=\"$y\" text-anchor=\"middle\" font-size=\"36\" fill=\"$color\" $stroke font-family=\"serif\" class=\"chess-piece-drag\">$piece</text>\n";
                         }
                         ?>
                         <!-- File labels -->
@@ -1385,11 +1435,11 @@ if ($pdo) {
                         $files = ['a','b','c','d','e','f','g','h'];
                         foreach ($files as $i => $f) {
                             $x = $i * 50 + 25;
-                            echo "<text x=\"$x\" y=\"396\" text-anchor=\"middle\" font-size=\"8\" fill=\"#6B6358\" font-family=\"sans-serif\" letter-spacing=\"0.05em\">$f</text>\n";
+                            echo "<text x=\"$x\" y=\"396\" text-anchor=\"middle\" font-size=\"8\" fill=\"#52525B\" font-family=\"sans-serif\" letter-spacing=\"0.05em\">$f</text>\n";
                         }
                         for ($r = 8; $r >= 1; $r--) {
                             $y = (8 - $r) * 50 + 30;
-                            echo "<text x=\"4\" y=\"$y\" font-size=\"8\" fill=\"#6B6358\" font-family=\"sans-serif\">$r</text>\n";
+                            echo "<text x=\"4\" y=\"$y\" font-size=\"8\" fill=\"#52525B\" font-family=\"sans-serif\">$r</text>\n";
                         }
                         ?>
                     </svg>
@@ -1536,9 +1586,9 @@ if ($pdo) {
                                     <?= htmlspecialchars($st['team_name']) ?>
                                 </td>
                                 <td style="text-align: center;"><?= (int)$st['played'] ?></td>
-                                <td style="text-align: center; font-weight: 600; color: #1E6B23;"><?= (int)$st['won'] ?></td>
+                                <td style="text-align: center; font-weight: 600; color: var(--ink);"><?= (int)$st['won'] ?></td>
                                 <td style="text-align: center;"><?= (int)$st['drawn'] ?></td>
-                                <td style="text-align: center; color: #922B21;"><?= (int)$st['lost'] ?></td>
+                                <td style="text-align: center; color: var(--red);"><?= (int)$st['lost'] ?></td>
                                 <td style="text-align: center; font-weight: 600;"><?= number_format((float)$st['game_points'], 1) ?></td>
                                 <td style="text-align: center;">
                                     <span class="mp-badge"><?= (int)$st['match_points'] ?></span>
@@ -2017,7 +2067,7 @@ if ($pdo) {
             if (clientErrors.length > 0) {
                 formFeedback.className = 'form-feedback is-visible';
                 formFeedback.innerHTML = `
-                    <div style="background: #FDF2F0; border-left: 4px solid var(--red); padding: 1.25rem 1.5rem; color: #922B21;">
+                    <div style="background: var(--accent-tint); border-left: 4px solid var(--red); padding: 1.25rem 1.5rem; color: var(--red);">
                         <strong style="font-family: var(--font-display); font-size: 1.15rem; display: block; margin-bottom: 0.5rem;">Registration Requirements Not Met:</strong>
                         <ul style="padding-left: 1.5rem; line-height: 1.6;">
                             ${clientErrors.map(e => `<li>${e}</li>`).join('')}
@@ -2032,7 +2082,7 @@ if ($pdo) {
             btnSubmitReg.innerHTML = 'Verifying & Registering... ⏳';
             formFeedback.className = 'form-feedback is-visible';
             formFeedback.innerHTML = `
-                <div style="background: #EDE6D2; border: 1px solid var(--rule); padding: 1rem 1.5rem; color: var(--ink);">
+                <div style="background: var(--cream-dark); border: 1px solid var(--rule); padding: 1rem 1.5rem; color: var(--ink);">
                     Transmitting team registration dossier to tournament database...
                 </div>`;
 
@@ -2051,14 +2101,14 @@ if ($pdo) {
                     // Success receipt
                     formFeedback.innerHTML = `
                         <div class="receipt-card">
-                            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid #A5D6A7; padding-bottom: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid var(--ink); padding-bottom: 0.75rem;">
                                 <div>
                                     <h3 class="receipt-title">♔ Team Registration Confirmed!</h3>
-                                    <p style="color: #2E7D32; font-size: 1.05rem;">
+                                    <p style="color: var(--ink); font-size: 1.05rem;">
                                         <strong>Team: ${data.data.team_name}</strong> (Squad ID: #${data.data.team_id})
                                     </p>
                                 </div>
-                                <span style="background: #2E7D32; color: #FFF; padding: 0.25rem 0.75rem; font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">
+                                <span style="background: var(--ink); color: var(--cream); padding: 0.25rem 0.75rem; font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: 0.85rem;">
                                     Official Entry Recorded
                                 </span>
                             </div>
@@ -2074,7 +2124,7 @@ if ($pdo) {
                                 </p>
                             </div>
                             <div style="display: flex; gap: 1rem; margin-top: 1.25rem;">
-                                <button type="button" onclick="window.print()" class="btn-submit-reg" style="background: #2E7D32; padding: 0.6rem 1.5rem; font-size: 1rem;">
+                                <button type="button" onclick="window.print()" class="btn-submit-reg" style="background: var(--ink); padding: 0.6rem 1.5rem; font-size: 1rem;">
                                     🖨️ Print Confirmation Slip
                                 </button>
                                 <button type="button" onclick="location.reload()" class="btn-add-member" style="padding: 0.6rem 1.5rem; font-size: 1rem;">
@@ -2094,7 +2144,7 @@ if ($pdo) {
                         </ul>` : '';
 
                     formFeedback.innerHTML = `
-                        <div style="background: #FDF2F0; border-left: 4px solid var(--red); padding: 1.25rem 1.5rem; color: #922B21;">
+                        <div style="background: var(--accent-tint); border-left: 4px solid var(--red); padding: 1.25rem 1.5rem; color: var(--red);">
                             <strong style="font-family: var(--font-display); font-size: 1.15rem; display: block;">Registration Error:</strong>
                             <p style="margin-top: 0.25rem;">${data.message || 'Validation failed.'}</p>
                             ${errorsMarkup}
@@ -2106,7 +2156,7 @@ if ($pdo) {
                 btnSubmitReg.disabled = false;
                 btnSubmitReg.innerHTML = 'Submit Team Registration <span aria-hidden="true">→</span> <span style="font-weight: normal; opacity: 0.75; font-size: 0.9rem;">1.e4</span>';
                 formFeedback.innerHTML = `
-                    <div style="background: #FDF2F0; border-left: 4px solid var(--red); padding: 1.25rem 1.5rem; color: #922B21;">
+                    <div style="background: var(--accent-tint); border-left: 4px solid var(--red); padding: 1.25rem 1.5rem; color: var(--red);">
                         <strong style="font-family: var(--font-display); font-size: 1.15rem; display: block;">Connection Error:</strong>
                         <p style="margin-top: 0.25rem;">Unable to contact the registration server. Please check MySQL database service.</p>
                     </div>`;
@@ -2124,7 +2174,7 @@ if ($pdo) {
                     }
                 },
                 "color": {
-                    "value": ["#C0392B", "#1A1A1A", "#FFD700", "#C0C0C0", "#CD7F32"]
+                    "value": ["#0A0A0A", "#FFFFFF", "#A1A1AA", "#A93226"]
                 },
                 "shape": {
                     "type": "char",
