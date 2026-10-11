@@ -13,9 +13,53 @@
     </div>
     <div style="padding: 1.5rem;">
         
-        <!-- Create Match Form -->
+        <!-- Automatic Swiss Pairing Engine Panel -->
+        <div style="margin-bottom: 2rem; background: linear-gradient(135deg, #fbf7ff 0%, #f4ecf8 100%); padding: 1.5rem; border: 1.5px solid #8e44ad; border-radius: 8px; box-shadow: 0 2px 6px rgba(142,68,173,0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 1rem;">
+                <div>
+                    <h4 style="margin: 0; font-family: var(--font-display); color: #5b2c6f; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
+                        ⚡ Automatic FIDE Swiss System Pairing Engine
+                    </h4>
+                    <p style="margin: 6px 0 0 0; font-size: 0.88rem; color: #555; line-height: 1.45;">
+                        Automatically calculates official Swiss pairings based on current <strong>Match Points (MP)</strong> &amp; <strong>Game Points (GP)</strong> standings, strictly prevents duplicate match-ups, alternates Board 1 White/Black colors according to FIDE rules, and manages pairing byes for odd teams.
+                    </p>
+                </div>
+                <div style="background: rgba(142, 68, 173, 0.1); border-left: 3px solid #8e44ad; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; color: #4a235a;">
+                    <strong>FIDE Dutch System</strong> &bull; Score Brackets &bull; Color Balancing
+                </div>
+            </div>
+
+            <form method="POST" onsubmit="return confirm('Generate Swiss pairings for the selected round? Existing unplayed/draft pairings in this round will be updated.');">
+                <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; background: #fff; padding: 1rem; border-radius: 6px; border: 1px solid #e1d5eb;">
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: bold; color: #333; display: block; margin-bottom: 4px;">Target Round</label>
+                        <select name="swiss_round_number" required style="padding: 7px 12px; border-radius: 4px; border: 1px solid #ccc; font-weight: bold; min-width: 140px;" class="form-control">
+                            <?php foreach ($all_rounds as $r): ?>
+                                <option value="<?= (int)$r['round_number'] ?>">Round <?= (int)$r['round_number'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div style="padding-bottom: 6px;">
+                        <label style="font-size: 0.85rem; color: #444; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <input type="checkbox" name="overwrite_scheduled" value="1" checked style="accent-color: #8e44ad;">
+                            Overwrite existing draft/scheduled pairings for this round
+                        </label>
+                        <small style="color: #888; display: block; font-size: 0.75rem;">Note: Finalized/completed match scores are strictly protected and never overwritten.</small>
+                    </div>
+
+                    <div style="margin-left: auto;">
+                        <button type="submit" name="auto_swiss_pairing" class="btn-action" style="padding: 8px 18px; background: linear-gradient(135deg, #8e44ad 0%, #6c3483 100%); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                            ⚡ Generate Swiss Pairings
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Manual Match Form -->
         <form method="POST" style="margin-bottom: 2rem; background: #fafafa; padding: 1rem; border: 1px solid #ddd; border-radius: 4px;">
-            <h4 style="margin-top: 0; font-family: var(--font-display);">Schedule a Match</h4>
+            <h4 style="margin-top: 0; font-family: var(--font-display);">Manual Schedule / Custom Pairing</h4>
             <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                 <div>
                     <label style="font-size: 0.85rem; font-weight: bold;">Round</label><br>

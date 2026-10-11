@@ -10,6 +10,7 @@ require_once __DIR__ . '/src/Services/TournamentService.php';
 require_once __DIR__ . '/src/Services/MatchService.php';
 require_once __DIR__ . '/src/Services/DropBoardService.php';
 require_once __DIR__ . '/src/Services/ArbiterService.php';
+require_once __DIR__ . '/src/Services/SwissPairingService.php';
 require_once __DIR__ . '/src/Helpers/Flash.php';
 require_once __DIR__ . '/src/Helpers/View.php';
 
@@ -192,6 +193,17 @@ if ($is_authenticated && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($res['success']) Flash::setSuccess($res['message']);
         else Flash::setError($res['message']);
         header('Location: admin.php#rounds-manager');
+        exit;
+    }
+
+    // Auto-Generate Swiss Pairings
+    if (isset($_POST['auto_swiss_pairing'])) {
+        $targetRound = (int)($_POST['swiss_round_number'] ?? 0);
+        $overwrite = isset($_POST['overwrite_scheduled']) && $_POST['overwrite_scheduled'] === '1';
+        $res = SwissPairingService::commitPairings($targetRound, $overwrite);
+        if ($res['success']) Flash::setSuccess($res['message']);
+        else Flash::setError($res['message']);
+        header('Location: admin.php#pairings-manager');
         exit;
     }
 

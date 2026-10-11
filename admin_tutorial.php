@@ -352,26 +352,52 @@ $is_authenticated = AuthService::isAdminLoggedIn();
                 <!-- SECTION 6 -->
                 <section class="guide-section" id="pairings">
                     <div class="guide-header">
-                        <h2 class="guide-title"><span>⚔️</span> 6. Pairings Generator &amp; 6×6 Cross-Table Matrix</h2>
+                        <h2 class="guide-title"><span>⚔️</span> 6. Swiss System Pairings &amp; 6×6 Cross-Table Matrix</h2>
                     </div>
                     <div class="guide-body">
                         <p>
-                            Round-Robin tournaments require every team to play against all 5 opposing squads across 5 rounds without duplicate matchups.
+                            FOT Knights Arena supports both <strong>Automatic FIDE Dutch Swiss System Pairing</strong> and <strong>Manual Custom Match Scheduling</strong> with live duplicate prevention and cross-table tracking.
                         </p>
-                        <h4>Interactive 6×6 Cross-Table Matrix:</h4>
+
+                        <h4>⚡ Automatic FIDE Dutch Swiss System Engine</h4>
                         <p>
-                            Located in <strong>Section 5: Pairings &amp; Results Manager</strong>, the visual matrix shows:
+                            The integrated pairing engine computes fair and compliant pairings based on standard FIDE team chess guidelines:
                         </p>
                         <ul>
-                            <li><strong>Diagonal Cells:</strong> Grayed out (teams cannot play against themselves).</li>
-                            <li><strong>Scheduled Match Cells:</strong> Displays round badges (e.g. <span class="badge" style="background:#E3F2FD; color:#1565C0;">R1 (Scheduled)</span> or <span class="badge badge-green">R2 (Completed)</span>).</li>
-                            <li><strong>Unpaired Cells:</strong> Labeled with a dash (<code>—</code>), signaling available matchups.</li>
+                            <li><strong>Score Brackets:</strong> Teams are sorted by Match Points (MP) followed by Game Points (GP) and Sonneborn-Berger (SB) tiebreak. Matchups are paired within the same score group using top-half vs. bottom-half matching.</li>
+                            <li><strong>Strict Rematch Prevention:</strong> No two teams can play each other more than once throughout the tournament. The recursive backtracking solver automatically handles downfloats when score brackets conflict.</li>
+                            <li><strong>FIDE Board 1 Color Balancing:</strong> Teams alternate White and Black on Board 1 across successive rounds while equalizing total White/Black appearances (never 3 consecutive identical colors).</li>
+                            <li><strong>Odd Team Bye Allocation:</strong> If an odd number of teams is registered, a 1-point pairing bye is automatically assigned to the lowest eligible team that has not previously received a bye.</li>
                         </ul>
+
                         <div class="step-box">
                             <div class="step-num">⚡</div>
                             <div class="step-content">
-                                <h4>Creating a Pairing</h4>
-                                <p>Select the <strong>Round Number</strong>, <strong>Team A (White)</strong>, and <strong>Team B (Black)</strong>, then click <strong>Schedule Match Pairing</strong>. The system validates that neither team is already scheduled in that round.</p>
+                                <h4>Generating Swiss Pairings Automatically</h4>
+                                <ol style="margin: 0; padding-left: 20px;">
+                                    <li>Navigate to <strong>Pairings &amp; Matches Manager</strong> on the Admin Dashboard.</li>
+                                    <li>In the <strong>⚡ Automatic FIDE Swiss Pairing Engine</strong> card, select the <strong>Target Round</strong>.</li>
+                                    <li>Keep <em>"Overwrite existing draft/scheduled pairings"</em> checked if updating draft rounds (completed matches are always strictly protected and never touched).</li>
+                                    <li>Click <strong>⚡ Generate Swiss Pairings</strong>. The pairings and colors are computed and scheduled instantly!</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <h4 style="margin-top: 1.5rem;">Interactive 6×6 Cross-Table Matrix:</h4>
+                        <p>
+                            Located directly in the pairings section, the visual matrix shows:
+                        </p>
+                        <ul>
+                            <li><strong>Diagonal Cells:</strong> Grayed out (teams cannot play against themselves).</li>
+                            <li><strong>Scheduled Match Cells:</strong> Displays round numbers and status (e.g. Round 1, Round 2).</li>
+                            <li><strong>Unpaired Cells:</strong> Labeled with a dash (<code>—</code>), signaling available matchups.</li>
+                        </ul>
+
+                        <div class="step-box">
+                            <div class="step-num">📝</div>
+                            <div class="step-content">
+                                <h4>Manual Pairing / Custom Adjustments</h4>
+                                <p>If an arbiter needs to manually schedule or adjust a specific encounter, use the <strong>Manual Schedule / Custom Pairing</strong> form directly beneath the Swiss engine. Select the round and both teams to create the matchup.</p>
                             </div>
                         </div>
                     </div>

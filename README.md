@@ -51,6 +51,7 @@ Built with high-performance vanilla PHP, MySQL, and modern CSS/JavaScript follow
 - **Round Manager**: Create rounds, configure drop deadlines, and update public schedule dates and times.
 - **Admin Drop Override**: Arbiters can set or override drop boards for any team, even after round deadlines.
 - **Pairings & Matches Manager**:
+  - **⚡ Automatic FIDE Dutch Swiss System Pairing Engine**: Generates official Swiss pairings grouped by Match Points (MP) and Game Points (GP), guarantees strict no-rematch constraints, applies FIDE Board 1 color alternation and equalization, and awards pairing byes for odd team counts.
   - **6x6 Cross-Table Matrix**: Visual matrix showing historical matches and round numbers to prevent duplicate matchups.
   - **Manual Pairings**: Schedule matchups (Team A vs Team B) per round with validation preventing self-matches or duplicate round assignments.
   - **Board-by-Board Result Entry**: Enter individual board scores (`1-0`, `0.5-0.5`, `0-1`) automatically mapped to active playing players.
@@ -105,7 +106,9 @@ Chess/
 │       ├── TeamService.php      # Team registration, validation, and roster CRUD
 │       ├── TournamentService.php# Scoreboard settings, standings calculation, player rankings
 │       ├── MatchService.php     # Pairings validation, 6x6 matrix, board results & scoring
-│       └── DropBoardService.php # 4-board resolution, deadline checking & round CRUD
+│       ├── SwissPairingService.php # FIDE Dutch Swiss pairing algorithm & color balance
+│       ├── DropBoardService.php # 4-board resolution, deadline checking & round CRUD
+│       └── ArbiterService.php   # Arbiter management & public display
 │
 ├── views/
 │   ├── layouts/
