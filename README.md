@@ -59,6 +59,7 @@ Built with high-performance vanilla PHP, MySQL, and modern CSS/JavaScript follow
 - **Arbiters & Officials Management**: Register, update, reorder, and remove multi-arbiter panels (Chief Arbiter, Deputy Chief Arbiter, Sector Arbiters, FIDE titles, and contacts).
 - **Excel/CSV Export**: One-click download of all teams and player rosters.
 - **Admin Password Management**: Dedicated interface to safely change administrator credentials with current password verification.
+- **Interactive Admin Tutorial & Handbook (`admin_tutorial.php`)**: Comprehensive on-site manual with step-by-step guidance for tournament arbiters and organizers.
 
 ---
 

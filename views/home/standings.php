@@ -82,7 +82,14 @@ if (!$scoreboard_visible) return;
                 </tbody>
             </table>
         </div>
+        <?php
+            $mp_win = $mp_win ?? 2;
+            $mp_draw = $mp_draw ?? 1;
+            $mp_loss = $mp_loss ?? 0;
+            $mp_loss_zero_gp = $mp_loss_zero_gp ?? -1;
+            $mp_zero_gp_text = ($mp_loss_zero_gp < $mp_loss) ? ", Loss with 0 GP = {$mp_loss_zero_gp} pt" : "";
+        ?>
         <p style="font-size: 0.85rem; color: var(--ink-light); margin-top: 0.75rem;">
-            * P: Played, W: Won, D: Drawn, L: Lost, GP: Game Points (total individual board points), MP: Match Points (Win = 2 pts, Draw = 1 pt, Loss = 0 pts, Loss with 0 GP = -1 pt).
+            * P: Played, W: Won, D: Drawn, L: Lost, GP: Game Points (total individual board points), MP: Match Points (Win = <?= $mp_win ?> pts, Draw = <?= $mp_draw ?> pt, Loss = <?= $mp_loss ?> pts<?= $mp_zero_gp_text ?>).
         </p>
     </section>

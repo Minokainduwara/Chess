@@ -67,7 +67,11 @@ INSERT IGNORE INTO `tournament_settings` (`setting_key`, `setting_value`) VALUES
 ('countdown_enabled', '1'),
 ('countdown_target', '2026-10-10 07:00:00'),
 ('registration_open', '1'),
-('registration_closed_message', 'Official team registration for FOT Knights Arena is now closed.');
+('registration_closed_message', 'Official team registration for FOT Knights Arena is now closed.'),
+('mp_win', '2'),
+('mp_draw', '1'),
+('mp_loss', '0'),
+('mp_loss_zero_gp', '-1');
 
 -- 5. Rounds Table
 CREATE TABLE IF NOT EXISTS `rounds` (

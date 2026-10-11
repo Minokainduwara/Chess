@@ -168,6 +168,86 @@
             <input type="hidden" id="registration_open_input" name="registration_open" value="<?= $registration_open ? '1' : '0' ?>">
         </div>
 
+        <!-- ═══ MATCH POINT (MP) SCORING SYSTEM CONFIGURATION ═══ -->
+        <?php
+            $mp_win = $mp_win ?? 2;
+            $mp_draw = $mp_draw ?? 1;
+            $mp_loss = $mp_loss ?? 0;
+            $mp_loss_zero_gp = $mp_loss_zero_gp ?? -1;
+        ?>
+        <div class="publish-control-box" id="matchpoints-manager" style="margin-bottom: 2rem; border-top: 3px solid var(--ink); background: #FCFBF7;">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <div>
+                    <span style="font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--ink);">
+                        ⚖️ Match Point (MP) Scoring System Rules
+                    </span>
+                    <div style="font-size: 0.85rem; color: var(--ink-muted); margin-top: 0.2rem;">
+                        Configure how match outcomes are awarded. Updating this setting automatically recalculates all completed matches and standings.
+                    </div>
+                </div>
+                <div>
+                    <span class="badge" style="background: var(--cream-dark); color: var(--ink); font-size: 0.85rem; padding: 0.3rem 0.7rem;">
+                        Active: Win: <?= $mp_win ?> MP · Draw: <?= $mp_draw ?> MP · Loss: <?= $mp_loss ?> MP · 0-GP: <?= $mp_loss_zero_gp ?> MP
+                    </span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 0.75rem; align-items: flex-end;">
+                <div>
+                    <label class="form-label" for="mp_preset_select" style="font-size: 0.85rem;">Preset Scheme</label>
+                    <select id="mp_preset_select" class="form-control" style="background: #FFF;" onchange="applyMpPreset(this.value)">
+                        <option value="">— Select a Standard Scheme —</option>
+                        <option value="fot" <?= ($mp_win == 2 && $mp_draw == 1 && $mp_loss == 0 && $mp_loss_zero_gp == -1) ? 'selected' : '' ?>>FOT Arena Penalty (2-1-0 / -1 for 0-GP)</option>
+                        <option value="fide" <?= ($mp_win == 2 && $mp_draw == 1 && $mp_loss == 0 && $mp_loss_zero_gp == 0) ? 'selected' : '' ?>>Standard FIDE / Olympiad (2-1-0-0)</option>
+                        <option value="three_point" <?= ($mp_win == 3 && $mp_draw == 1 && $mp_loss == 0 && $mp_loss_zero_gp == 0) ? 'selected' : '' ?>>3-Point Win System (3-1-0-0)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="input_mp_win" style="font-size: 0.85rem;">Match Win (MP) *</label>
+                    <input type="number" id="input_mp_win" name="mp_win" class="form-control" value="<?= (int)$mp_win ?>" required>
+                </div>
+                <div>
+                    <label class="form-label" for="input_mp_draw" style="font-size: 0.85rem;">Match Draw (MP) *</label>
+                    <input type="number" id="input_mp_draw" name="mp_draw" class="form-control" value="<?= (int)$mp_draw ?>" required>
+                </div>
+                <div>
+                    <label class="form-label" for="input_mp_loss" style="font-size: 0.85rem;">Normal Loss (MP) *</label>
+                    <input type="number" id="input_mp_loss" name="mp_loss" class="form-control" value="<?= (int)$mp_loss ?>" required>
+                </div>
+                <div>
+                    <label class="form-label" for="input_mp_loss_zero_gp" style="font-size: 0.85rem;" title="Penalty when team loses all 4 boards (0 GP)">0-GP Loss Penalty *</label>
+                    <input type="number" id="input_mp_loss_zero_gp" name="mp_loss_zero_gp" class="form-control" value="<?= (int)$mp_loss_zero_gp ?>" required>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                <span style="font-size: 0.85rem; color: var(--ink-muted);">
+                    ⚡ <strong>Auto-Recalculate:</strong> Clicking update will recalculate all existing match results and rebuild the scoreboard immediately.
+                </span>
+                <button type="submit" name="update_matchpoint_system" value="1" class="btn-submit" style="width: auto; padding: 0.55rem 1.75rem; font-size: 0.95rem;">
+                    💾 Apply Scoring System &amp; Recalculate
+                </button>
+            </div>
+        </div>
+
+        <script>
+        function applyMpPreset(preset) {
+            var w = document.getElementById('input_mp_win');
+            var d = document.getElementById('input_mp_draw');
+            var l = document.getElementById('input_mp_loss');
+            var z = document.getElementById('input_mp_loss_zero_gp');
+            if (!w || !d || !l || !z) return;
+
+            if (preset === 'fot') {
+                w.value = 2; d.value = 1; l.value = 0; z.value = -1;
+            } else if (preset === 'fide') {
+                w.value = 2; d.value = 1; l.value = 0; z.value = 0;
+            } else if (preset === 'three_point') {
+                w.value = 3; d.value = 1; l.value = 0; z.value = 0;
+            }
+        }
+        </script>
+
         <?php if (empty($standings_teams)): ?>
             <div class="alert" style="margin: 1rem 0; text-align: center;">
                 No teams have registered yet. As soon as squads register, they will appear here to enter match scores.

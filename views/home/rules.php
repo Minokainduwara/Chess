@@ -22,7 +22,14 @@
             </div>
             <div class="rule-entry gtouch-hover">
                 <span class="rule-move">3.</span>
-                <span class="rule-text">Scoring System: A match win earns 2 Match Points (MP), a draw earns 1 MP. A match loss earns 0 MP, however, a team losing all 4 boards (0 Game Points) will receive -1 MP.</span>
+                <?php
+                    $mp_win = $mp_win ?? 2;
+                    $mp_draw = $mp_draw ?? 1;
+                    $mp_loss = $mp_loss ?? 0;
+                    $mp_loss_zero_gp = $mp_loss_zero_gp ?? -1;
+                    $penalty_text = ($mp_loss_zero_gp < $mp_loss) ? ", however, a team losing all 4 boards (0 Game Points) will receive {$mp_loss_zero_gp} MP" : "";
+                ?>
+                <span class="rule-text">Scoring System: A match win earns <?= $mp_win ?> Match Points (MP), a draw earns <?= $mp_draw ?> MP. A match loss earns <?= $mp_loss ?> MP<?= $penalty_text ?>.</span>
             </div>
             <div class="rule-entry gtouch-hover">
                 <span class="rule-move">4.</span>

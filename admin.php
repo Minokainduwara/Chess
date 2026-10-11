@@ -141,6 +141,25 @@ if ($is_authenticated && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // Update Match Point System Configuration
+    if (isset($_POST['update_matchpoint_system'])) {
+        $mpWin        = (int)($_POST['mp_win'] ?? 2);
+        $mpDraw       = (int)($_POST['mp_draw'] ?? 1);
+        $mpLoss       = (int)($_POST['mp_loss'] ?? 0);
+        $mpLossZeroGp = (int)($_POST['mp_loss_zero_gp'] ?? -1);
+
+        TournamentService::updateSetting('mp_win', (string)$mpWin);
+        TournamentService::updateSetting('mp_draw', (string)$mpDraw);
+        TournamentService::updateSetting('mp_loss', (string)$mpLoss);
+        TournamentService::updateSetting('mp_loss_zero_gp', (string)$mpLossZeroGp);
+
+        TournamentService::recalculateAllMatchesAndStandings();
+
+        Flash::setSuccess("Match point scoring system updated: Win={$mpWin} MP, Draw={$mpDraw} MP, Loss={$mpLoss} MP, 0-GP Loss={$mpLossZeroGp} MP. All matches and standings were recalculated.");
+        header('Location: admin.php#matchpoints-manager');
+        exit;
+    }
+
     // Create Round
     if (isset($_POST['create_round'])) {
         $res = DropBoardService::createRound((int)$_POST['round_number'], $_POST['label'] ?? '', $_POST['deadline'] ?? null);
@@ -354,6 +373,10 @@ if ($is_authenticated) {
     $countdown_target   = $settings['countdown_target'] ?? '2026-10-10 07:00:00';
     $registration_open  = ($settings['registration_open'] ?? '1') === '1';
     $registration_closed_message = $settings['registration_closed_message'] ?? 'Official team registration for FOT Knights Arena is now closed.';
+    $mp_win        = (int)($settings['mp_win'] ?? 2);
+    $mp_draw       = (int)($settings['mp_draw'] ?? 1);
+    $mp_loss       = (int)($settings['mp_loss'] ?? 0);
+    $mp_loss_zero_gp = (int)($settings['mp_loss_zero_gp'] ?? -1);
 
     $standings_teams = TournamentService::getStandings();
 
@@ -544,7 +567,9 @@ if ($is_authenticated) {
             </a>
             <nav class="admin-nav">
                 <a href="index.php" class="btn-link">← Public Site</a>
+                <a href="admin_tutorial.php" class="btn-link" title="Administrator Handbook & Tutorial">📖 Tutorial</a>
                 <?php if ($is_authenticated): ?>
+                    <a href="#matchpoints-manager" class="btn-link" title="Configure Match Point Rules">⚙️ Match Points</a>
                     <a href="#arbiters-manager" class="btn-link" title="Manage Tournament Arbiters">⚖️ Arbiters</a>
                     <a href="#password-manager" class="btn-link" title="Change Admin Password">🔑 Password</a>
                     <a href="admin.php?action=export_csv" class="btn-link" title="Export CSV for Excel">📥 Export CSV</a>
@@ -593,6 +618,10 @@ if ($is_authenticated) {
                 'countdown_target'            => $countdown_target,
                 'registration_open'           => $registration_open,
                 'registration_closed_message' => $registration_closed_message,
+                'mp_win'                      => $mp_win,
+                'mp_draw'                     => $mp_draw,
+                'mp_loss'                     => $mp_loss,
+                'mp_loss_zero_gp'             => $mp_loss_zero_gp,
                 'standings_teams'             => $standings_teams
             ]); ?>
 
@@ -639,12 +668,15 @@ if ($is_authenticated) {
 
     <!-- Admin Interactive Scripts -->
     <script>
+    var currentMpWin = <?= (int)($mp_win ?? 2) ?>;
+    var currentMpDraw = <?= (int)($mp_draw ?? 1) ?>;
+
     function autoCalcPoints(el) {
         var row = el.closest('tr');
         var w = parseInt(row.querySelector('.score-w').value) || 0;
         var d = parseInt(row.querySelector('.score-d').value) || 0;
         var mp = row.querySelector('.score-mp');
-        if (mp) mp.value = (w * 2) + d;
+        if (mp) mp.value = (w * currentMpWin) + (d * currentMpDraw);
     }
 
     function calcAllMatchPoints() {
@@ -655,7 +687,7 @@ if ($is_authenticated) {
             if (wInput && dInput && mp) {
                 var w = parseInt(wInput.value) || 0;
                 var d = parseInt(dInput.value) || 0;
-                mp.value = (w * 2) + d;
+                mp.value = (w * currentMpWin) + (d * currentMpDraw);
             }
         });
     }

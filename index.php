@@ -72,10 +72,19 @@ View::render('home/schedule', [
     'schedule_rounds' => $schedule_rounds
 ]);
 
+$mp_win        = (int)($settings['mp_win'] ?? 2);
+$mp_draw       = (int)($settings['mp_draw'] ?? 1);
+$mp_loss       = (int)($settings['mp_loss'] ?? 0);
+$mp_loss_zero_gp = (int)($settings['mp_loss_zero_gp'] ?? -1);
+
 View::render('home/standings', [
     'scoreboard_visible' => $scoreboard_visible,
     'scoreboard_status'  => $scoreboard_status,
-    'standings_teams'    => $standings_teams
+    'standings_teams'    => $standings_teams,
+    'mp_win'             => $mp_win,
+    'mp_draw'            => $mp_draw,
+    'mp_loss'            => $mp_loss,
+    'mp_loss_zero_gp'    => $mp_loss_zero_gp
 ]);
 
 View::render('home/indiv_standings', [
@@ -86,7 +95,12 @@ View::render('home/pairings', [
     'public_matches' => $public_matches
 ]);
 
-View::render('home/rules');
+View::render('home/rules', [
+    'mp_win'          => $mp_win,
+    'mp_draw'         => $mp_draw,
+    'mp_loss'         => $mp_loss,
+    'mp_loss_zero_gp' => $mp_loss_zero_gp
+]);
 
 View::render('home/register_form', [
     'registration_open'           => $registration_open,

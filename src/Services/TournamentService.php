@@ -114,4 +114,40 @@ class TournamentService {
             $stmtUpdB->execute([$bW, $bD, $bL, $m['team_b_gp'], $m['team_b_mp'], $bId]);
         }
     }
+
+    /**
+     * Recalculate match points for all completed matches using currently configured MP rules,
+     * then rebuild the standings table.
+     */
+    public static function recalculateAllMatchesAndStandings(): void {
+        $pdo = Database::getConnection();
+        $settings = self::getSettings();
+        $mpWin        = (int)($settings['mp_win'] ?? 2);
+        $mpDraw       = (int)($settings['mp_draw'] ?? 1);
+        $mpLoss       = (int)($settings['mp_loss'] ?? 0);
+        $mpLossZeroGp = (int)($settings['mp_loss_zero_gp'] ?? -1);
+
+        $stmtMatches = $pdo->query("SELECT id, team_a_gp, team_b_gp FROM `matches` WHERE `status` = 'completed'");
+        $stmtUpdMatch = $pdo->prepare("UPDATE `matches` SET `team_a_mp` = ?, `team_b_mp` = ? WHERE `id` = ?");
+
+        while ($m = $stmtMatches->fetch(PDO::FETCH_ASSOC)) {
+            $aGp = (float)$m['team_a_gp'];
+            $bGp = (float)$m['team_b_gp'];
+
+            if ($aGp > $bGp) {
+                $aMp = $mpWin;
+                $bMp = ($bGp == 0.0) ? $mpLossZeroGp : $mpLoss;
+            } elseif ($aGp < $bGp) {
+                $bMp = $mpWin;
+                $aMp = ($aGp == 0.0) ? $mpLossZeroGp : $mpLoss;
+            } else {
+                $aMp = $mpDraw;
+                $bMp = $mpDraw;
+            }
+
+            $stmtUpdMatch->execute([$aMp, $bMp, (int)$m['id']]);
+        }
+
+        self::recalculateStandings();
+    }
 }

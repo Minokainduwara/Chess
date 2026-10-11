@@ -169,20 +169,26 @@ class MatchService {
                 $stmtIns->execute([$matchId, $i, $aM, $bM, $res]);
             }
 
-            // Calculate Match Points (MP) with -1 MP rule for 0 GP loss
+            // Calculate Match Points (MP) based on configured tournament settings
+            $settings = TournamentService::getSettings();
+            $mpWin        = (int)($settings['mp_win'] ?? 2);
+            $mpDraw       = (int)($settings['mp_draw'] ?? 1);
+            $mpLoss       = (int)($settings['mp_loss'] ?? 0);
+            $mpLossZeroGp = (int)($settings['mp_loss_zero_gp'] ?? -1);
+
             $teamAMp = 0;
             $teamBMp = 0;
 
             if ($status === 'completed') {
                 if ($teamAGp > $teamBGp) {
-                    $teamAMp = 2;
-                    $teamBMp = ($teamBGp == 0.0) ? -1 : 0;
+                    $teamAMp = $mpWin;
+                    $teamBMp = ($teamBGp == 0.0) ? $mpLossZeroGp : $mpLoss;
                 } elseif ($teamAGp < $teamBGp) {
-                    $teamBMp = 2;
-                    $teamAMp = ($teamAGp == 0.0) ? -1 : 0;
+                    $teamBMp = $mpWin;
+                    $teamAMp = ($teamAGp == 0.0) ? $mpLossZeroGp : $mpLoss;
                 } else {
-                    $teamAMp = 1;
-                    $teamBMp = 1;
+                    $teamAMp = $mpDraw;
+                    $teamBMp = $mpDraw;
                 }
             }
 
