@@ -24,6 +24,7 @@ Built with high-performance vanilla PHP, MySQL, and modern CSS/JavaScript follow
 - **Interactive Hero & Board**: Embedded Sicilian Defense chess diagram and interactive floating chess pieces with cursor/touch parallax.
 - **Dynamic Countdown Ticker**: Timezone-aware (Asia/Colombo UTC+05:30) countdown synced to the upcoming round's deadline or tournament start.
 - **Dynamic Round Schedule**: Editable round schedule pulled live from the database with active round status badges.
+- **Tournament Arbiters & Officials Panel**: Public showcase of appointed tournament arbiters (Chief Arbiter, Deputy Arbiters, Sector Arbiters), displaying roles, FIDE titles/IDs, and official contact channels.
 - **Live Team Standings Scoreboard**: Podium badges, Match Points (MP), Game Points (GP), matches played, wins, draws, losses, and arbiter notes.
 - **Individual Player Standings**: Real-time tournament-wide individual player leaderboard with 10-per-page client-side pagination.
 - **Pairings & Results Display**: Public view of scheduled matchups and finalized board scores.
@@ -54,7 +55,9 @@ Built with high-performance vanilla PHP, MySQL, and modern CSS/JavaScript follow
   - **Board-by-Board Result Entry**: Enter individual board scores (`1-0`, `0.5-0.5`, `0-1`) automatically mapped to active playing players.
   - **Automated Recalculation**: Finalizing a match calculates team Game Points & Match Points and updates the tournament standings immediately.
 - **Printable Lineups**: Print official 4-board active match rosters.
+- **Arbiters & Officials Management**: Register, update, reorder, and remove multi-arbiter panels (Chief Arbiter, Deputy Chief Arbiter, Sector Arbiters, FIDE titles, and contacts).
 - **Excel/CSV Export**: One-click download of all teams and player rosters.
+- **Admin Password Management**: Dedicated interface to safely change administrator credentials with current password verification.
 
 ---
 

@@ -81,4 +81,41 @@ class AuthService {
         self::startSession();
         unset($_SESSION['captain_team_id'], $_SESSION['captain_team_name']);
     }
+
+    /**
+     * Change admin password with current password verification
+     */
+    public static function changeAdminPassword(string $username, string $currentPassword, string $newPassword, string $confirmPassword): array {
+        self::startSession();
+        $pdo = Database::getConnection();
+
+        if (empty($currentPassword)) {
+            return ['success' => false, 'message' => 'Current password is required.'];
+        }
+        if (empty($newPassword)) {
+            return ['success' => false, 'message' => 'New password cannot be empty.'];
+        }
+        if (mb_strlen($newPassword) < 6) {
+            return ['success' => false, 'message' => 'New password must be at least 6 characters long.'];
+        }
+        if ($newPassword !== $confirmPassword) {
+            return ['success' => false, 'message' => 'New password and confirmation password do not match.'];
+        }
+
+        // Verify current password
+        $stmt = $pdo->prepare("SELECT * FROM `admins` WHERE `username` = ?");
+        $stmt->execute([$username]);
+        $admin = $stmt->fetch();
+
+        if (!$admin || !password_verify($currentPassword, $admin['password_hash'])) {
+            return ['success' => false, 'message' => 'Incorrect current password.'];
+        }
+
+        // Update password hash
+        $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmtUpd = $pdo->prepare("UPDATE `admins` SET `password_hash` = ? WHERE `username` = ?");
+        $stmtUpd->execute([$newHash, $username]);
+
+        return ['success' => true, 'message' => 'Administrator password changed successfully!'];
+    }
 }

@@ -9,6 +9,7 @@ require_once __DIR__ . '/src/Services/TeamService.php';
 require_once __DIR__ . '/src/Services/TournamentService.php';
 require_once __DIR__ . '/src/Services/MatchService.php';
 require_once __DIR__ . '/src/Services/DropBoardService.php';
+require_once __DIR__ . '/src/Services/ArbiterService.php';
 require_once __DIR__ . '/src/Helpers/Flash.php';
 require_once __DIR__ . '/src/Helpers/View.php';
 
@@ -192,6 +193,82 @@ if ($is_authenticated && $_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: admin.php#pairings-manager');
         exit;
     }
+
+    // Change Admin Password
+    if (isset($_POST['change_admin_password'])) {
+        $curr = $_POST['current_password'] ?? '';
+        $new  = $_POST['new_password'] ?? '';
+        $conf = $_POST['confirm_password'] ?? '';
+        $admin_user = AuthService::getAdminUser() ?? 'admin';
+
+        $res = AuthService::changeAdminPassword($admin_user, $curr, $new, $conf);
+        if ($res['success']) {
+            Flash::setSuccess($res['message']);
+        } else {
+            Flash::setError($res['message']);
+        }
+        header('Location: admin.php#password-manager');
+        exit;
+    }
+
+    // Add Arbiter
+    if (isset($_POST['add_arbiter'])) {
+        try {
+            $name = trim($_POST['name'] ?? '');
+            $role = trim($_POST['role'] ?? 'Arbiter');
+            $fideId = trim($_POST['fide_id'] ?? '');
+            $contact = trim($_POST['contact'] ?? '');
+            $order = (int)($_POST['display_order'] ?? 1);
+
+            if ($name === '') {
+                Flash::setError('Arbiter full name is required.');
+            } else {
+                ArbiterService::createArbiter($name, $role, $fideId ?: null, $contact ?: null, $order);
+                Flash::setSuccess("Arbiter '{$name}' was registered successfully.");
+            }
+        } catch (Throwable $e) {
+            Flash::setError("Unable to save arbiter: " . $e->getMessage());
+        }
+        header('Location: admin.php#arbiters-manager');
+        exit;
+    }
+
+    // Update Arbiter
+    if (isset($_POST['update_arbiter'])) {
+        try {
+            $arb_id = (int)($_POST['arbiter_id'] ?? 0);
+            $name = trim($_POST['name'] ?? '');
+            $role = trim($_POST['role'] ?? 'Arbiter');
+            $fideId = trim($_POST['fide_id'] ?? '');
+            $contact = trim($_POST['contact'] ?? '');
+            $order = (int)($_POST['display_order'] ?? 1);
+
+            if ($arb_id > 0 && $name !== '') {
+                ArbiterService::updateArbiter($arb_id, $name, $role, $fideId ?: null, $contact ?: null, $order);
+                Flash::setSuccess("Arbiter #{$arb_id} '{$name}' was updated.");
+            } else {
+                Flash::setError('Invalid arbiter details for update.');
+            }
+        } catch (Throwable $e) {
+            Flash::setError("Unable to update arbiter: " . $e->getMessage());
+        }
+        header('Location: admin.php#arbiters-manager');
+        exit;
+    }
+
+    // Delete Arbiter
+    if (isset($_POST['delete_arbiter'])) {
+        try {
+            $arb_id = (int)($_POST['arbiter_id'] ?? 0);
+            if ($arb_id > 0 && ArbiterService::deleteArbiter($arb_id)) {
+                Flash::setSuccess("Arbiter #{$arb_id} was removed.");
+            }
+        } catch (Throwable $e) {
+            Flash::setError("Unable to delete arbiter: " . $e->getMessage());
+        }
+        header('Location: admin.php#arbiters-manager');
+        exit;
+    }
 }
 
 // ── 4. CSV Export ──
@@ -237,9 +314,11 @@ $pairing_matrix = [];
 $override_data = null;
 $printable_boards = [];
 $edit_match_data = null;
+$all_arbiters = [];
 
 if ($is_authenticated) {
     $pdo = Database::getConnection();
+    $all_arbiters = ArbiterService::getAllArbiters();
 
     // Stats
     $total_teams   = (int)$pdo->query("SELECT COUNT(*) FROM `teams`")->fetchColumn();
@@ -449,6 +528,8 @@ if ($is_authenticated) {
             <nav class="admin-nav">
                 <a href="index.php" class="btn-link">← Public Site</a>
                 <?php if ($is_authenticated): ?>
+                    <a href="#arbiters-manager" class="btn-link" title="Manage Tournament Arbiters">⚖️ Arbiters</a>
+                    <a href="#password-manager" class="btn-link" title="Change Admin Password">🔑 Password</a>
                     <a href="admin.php?action=export_csv" class="btn-link" title="Export CSV for Excel">📥 Export CSV</a>
                     <a href="admin.php?action=logout" class="btn-link btn-red">Logout</a>
                 <?php endif; ?>
@@ -523,6 +604,16 @@ if ($is_authenticated) {
                 'all_matches'      => $all_matches,
                 'pairing_matrix'   => $pairing_matrix,
                 'edit_match_data'  => $edit_match_data
+            ]); ?>
+
+            <!-- 6. Arbiters & Officials Manager -->
+            <?php View::render('admin/arbiters', [
+                'all_arbiters' => $all_arbiters
+            ]); ?>
+
+            <!-- 7. Change Password Manager -->
+            <?php View::render('admin/password', [
+                'admin_user' => AuthService::getAdminUser()
             ]); ?>
         <?php endif; ?>
     </main>

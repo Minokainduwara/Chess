@@ -7,6 +7,7 @@
 require_once __DIR__ . '/src/Services/TournamentService.php';
 require_once __DIR__ . '/src/Services/MatchService.php';
 require_once __DIR__ . '/src/Services/DropBoardService.php';
+require_once __DIR__ . '/src/Services/ArbiterService.php';
 require_once __DIR__ . '/src/Helpers/View.php';
 
 // ── 1. Fetch Tournament Settings ──
@@ -39,11 +40,12 @@ if ($countdown_enabled && $countdown_target !== '') {
     }
 }
 
-// ── 4. Fetch Standings, Matches & Schedules ──
+// ── 4. Fetch Standings, Matches, Arbiters & Schedules ──
 $standings_teams = $scoreboard_visible ? TournamentService::getStandings() : [];
 $individual_standings = TournamentService::getIndividualStandings();
 $public_matches = MatchService::getPublicMatches();
 $schedule_rounds = DropBoardService::getAllRounds('ASC');
+$all_arbiters = ArbiterService::getAllArbiters();
 
 // ── 5. Render Page View Partials ──
 View::render('layouts/header', [
@@ -57,6 +59,10 @@ View::render('home/hero', [
 ]);
 
 View::render('home/details');
+
+View::render('home/arbiters', [
+    'all_arbiters' => $all_arbiters
+]);
 
 View::render('home/schedule', [
     'schedule_rounds' => $schedule_rounds

@@ -62,6 +62,8 @@ $captain_team_name = $captain_team_name ?? null;
                 <?php else: ?>
                     <a href="index.php#details" class="gtouch-hover">About</a>
                     <span class="header-nav-sep" aria-hidden="true">·</span>
+                    <a href="index.php#arbiters" class="gtouch-hover">Arbiters</a>
+                    <span class="header-nav-sep" aria-hidden="true">·</span>
                     <a href="index.php#schedule" class="gtouch-hover">Schedule</a>
                     <?php if ($scoreboard_visible): ?>
                     <span class="header-nav-sep" aria-hidden="true">·</span>

@@ -123,7 +123,46 @@ class Migrations {
                 CONSTRAINT `fk_board_member_b` FOREIGN KEY (`team_b_member_id`) REFERENCES `members`(`id`) ON DELETE SET NULL,
                 UNIQUE KEY `unique_match_board` (`match_id`, `board_number`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+            CREATE TABLE IF NOT EXISTS `arbiters` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `name` VARCHAR(150) NOT NULL,
+                `role` VARCHAR(100) NOT NULL DEFAULT 'Arbiter',
+                `fide_id` VARCHAR(50) DEFAULT NULL,
+                `contact` VARCHAR(150) DEFAULT NULL,
+                `display_order` INT NOT NULL DEFAULT 1,
+                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
+
+        // Migrate arbiters table columns if older schema exists
+        try {
+            $cols = [];
+            $stmtCols = $pdo->query("SHOW COLUMNS FROM `arbiters`");
+            while ($c = $stmtCols->fetch(PDO::FETCH_ASSOC)) {
+                $cols[strtolower($c['Field'])] = true;
+            }
+            if (!isset($cols['name'])) {
+                $pdo->exec("ALTER TABLE `arbiters` ADD COLUMN `name` VARCHAR(150) NOT NULL AFTER `id`");
+            }
+            if (!isset($cols['role'])) {
+                $pdo->exec("ALTER TABLE `arbiters` ADD COLUMN `role` VARCHAR(100) NOT NULL DEFAULT 'Arbiter' AFTER `name`");
+            }
+            if (!isset($cols['fide_id'])) {
+                $pdo->exec("ALTER TABLE `arbiters` ADD COLUMN `fide_id` VARCHAR(50) DEFAULT NULL AFTER `role`");
+            }
+            if (!isset($cols['contact'])) {
+                $pdo->exec("ALTER TABLE `arbiters` ADD COLUMN `contact` VARCHAR(150) DEFAULT NULL AFTER `fide_id`");
+            }
+            if (!isset($cols['display_order'])) {
+                $pdo->exec("ALTER TABLE `arbiters` ADD COLUMN `display_order` INT NOT NULL DEFAULT 1 AFTER `contact`");
+            }
+            if (!isset($cols['created_at'])) {
+                $pdo->exec("ALTER TABLE `arbiters` ADD COLUMN `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            }
+        } catch (PDOException $e) {
+            // Ignore if already applied
+        }
 
         // Seed default settings if missing
         $pdo->exec("

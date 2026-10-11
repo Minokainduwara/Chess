@@ -123,3 +123,14 @@ CREATE TABLE IF NOT EXISTS `match_boards` (
   CONSTRAINT `fk_board_member_b` FOREIGN KEY (`team_b_member_id`) REFERENCES `members`(`id`) ON DELETE SET NULL,
   UNIQUE KEY `unique_match_board` (`match_id`, `board_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 9. Arbiters Table (Tournament Arbiters & Officials)
+CREATE TABLE IF NOT EXISTS `arbiters` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(150) NOT NULL,
+  `role` VARCHAR(100) NOT NULL DEFAULT 'Arbiter',
+  `fide_id` VARCHAR(50) DEFAULT NULL,
+  `contact` VARCHAR(150) DEFAULT NULL,
+  `display_order` INT NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
