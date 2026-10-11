@@ -45,7 +45,8 @@ Built with high-performance vanilla PHP, MySQL, and modern CSS/JavaScript follow
 ### 3. ⚙️ Admin Control Panel (`admin.php`)
 - **Team Verification & Approval**: Pending teams remain hidden from the public standings until reviewed and approved by the organizer.
 - **Roster Management**: Edit player details, reorder board positions, or remove teams.
-- **Instant Toggles**: One-click AJAX switches to show/hide the public scoreboard or countdown ticker without page reloads.
+- **Instant Toggles**: One-click AJAX switches to show/hide the public scoreboard, toggle the countdown timer, or close/re-open team registration without page reloads.
+- **Registration Control**: Ability to close registration dynamically with a custom public announcement notice and server-side submission lock.
 - **Manual Standings Editor**: Override or fine-tune Match Points, Game Points, and arbiter notes.
 - **Round Manager**: Create rounds, configure drop deadlines, and update public schedule dates and times.
 - **Admin Drop Override**: Arbiters can set or override drop boards for any team, even after round deadlines.

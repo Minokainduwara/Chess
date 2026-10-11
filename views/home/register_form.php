@@ -3,14 +3,52 @@
  * Official Team Registration Section & Dynamic JS
  * FOT Knights Arena — Chess Tournament
  */
+$registration_open = $registration_open ?? true;
+$registration_closed_message = $registration_closed_message ?? 'Official team registration for FOT Knights Arena is now closed.';
 ?>
     <div class="page-rail"><hr class="section-rule--light section-rule"></div>
 
     <!-- ═══ REGISTRATION SECTION ═══ -->
     <section class="registration page-rail" id="register" aria-labelledby="reg-heading">
-        <h2 class="reg-heading" id="reg-heading">
-            <span aria-hidden="true">♔</span> Official Team Registration
-        </h2>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+            <h2 class="reg-heading" id="reg-heading" style="margin-bottom: 0;">
+                <span aria-hidden="true">♔</span> Official Team Registration
+            </h2>
+            <?php if (!$registration_open): ?>
+                <span class="badge" style="background: #FFEBEE; color: var(--red); border: 1px solid #EF9A9A; font-size: 0.85rem; padding: 0.35rem 0.75rem; font-weight: 700;">
+                    🔒 REGISTRATION CLOSED
+                </span>
+            <?php else: ?>
+                <span class="badge badge-green" style="font-size: 0.85rem; padding: 0.35rem 0.75rem; font-weight: 700;">
+                    ● REGISTRATION OPEN
+                </span>
+            <?php endif; ?>
+        </div>
+
+        <?php if (!$registration_open): ?>
+            <!-- CLOSED STATE HERO CARD -->
+            <div style="background: #FFFFFF; border: 2px solid var(--rule); border-top: 5px solid var(--red); padding: 3rem 2rem; margin-top: 1.5rem; text-align: center; border-radius: 4px; box-shadow: 4px 4px 0 rgba(0,0,0,0.05);">
+                <div style="font-size: 3.5rem; line-height: 1; margin-bottom: 1rem;">🔒</div>
+                <h3 style="font-family: var(--font-display); font-size: 1.85rem; font-weight: 700; color: var(--ink); margin-bottom: 0.75rem;">
+                    Registration is Currently Closed
+                </h3>
+                <p style="font-size: 1.15rem; color: var(--ink-muted); max-width: 620px; margin: 0 auto 1.75rem; line-height: 1.6;">
+                    <?= htmlspecialchars($registration_closed_message) ?>
+                </p>
+                <div style="display: inline-flex; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: center;">
+                    <a href="captain.php" class="btn-submit-reg" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; width: auto; padding: 0.75rem 1.75rem;">
+                        <span>🛡️</span> Already Registered? Access Captain Portal
+                    </a>
+                    <a href="index.php#standings" class="btn-add-member" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; width: auto; padding: 0.75rem 1.75rem;">
+                        <span>📊</span> View Tournament Standings
+                    </a>
+                </div>
+                <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--rule); font-size: 0.9rem; color: var(--ink-muted);">
+                    If your team needs special assistance or late roster adjustments, please contact the <a href="index.php#arbiters" style="color: var(--red); font-weight: 600;">Tournament Arbiters &amp; Officials</a>.
+                </div>
+            </div>
+    </section>
+        <?php return; endif; ?>
         <p class="reg-lead">
             Register your squad for FOT Knights Arena 2026. Each team requires a minimum of 4 and a maximum of 6 registered students. Per tournament rules, every team <strong>must include at least 1 female player</strong> and <strong>represent at least two batches</strong>. All registrations are reviewed by the tournament organizer — your team will appear in the public Arena Standings only after <strong>admin approval</strong>.
         </p>

@@ -74,7 +74,7 @@ $captain_team_name = $captain_team_name ?? null;
                     <span class="header-nav-sep" aria-hidden="true">·</span>
                     <a href="index.php#rules" class="gtouch-hover">Rules</a>
                     <span class="header-nav-sep" aria-hidden="true">·</span>
-                    <a href="index.php#register" class="gtouch-hover">Register</a>
+                    <a href="index.php#register" class="gtouch-hover"><?= !empty($registration_open) ? 'Register' : 'Register <span style="font-size:0.75rem; color:var(--red); font-weight:700;">(Closed)</span>' ?></a>
                     <span class="header-nav-sep" aria-hidden="true">·</span>
                     <a href="captain.php" style="color: var(--blue); font-weight: 600;" class="gtouch-hover">Captain Portal</a>
                     <span class="header-nav-sep" aria-hidden="true">·</span>

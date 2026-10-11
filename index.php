@@ -47,10 +47,14 @@ $public_matches = MatchService::getPublicMatches();
 $schedule_rounds = DropBoardService::getAllRounds('ASC');
 $all_arbiters = ArbiterService::getAllArbiters();
 
+$registration_open = ($settings['registration_open'] ?? '1') === '1';
+$registration_closed_message = $settings['registration_closed_message'] ?? 'Official team registration for FOT Knights Arena is now closed.';
+
 // ── 5. Render Page View Partials ──
 View::render('layouts/header', [
     'page_title'         => 'FOT Knights Arena — University of Ruhuna',
-    'scoreboard_visible' => $scoreboard_visible
+    'scoreboard_visible' => $scoreboard_visible,
+    'registration_open'  => $registration_open
 ]);
 
 View::render('home/hero', [
@@ -84,6 +88,9 @@ View::render('home/pairings', [
 
 View::render('home/rules');
 
-View::render('home/register_form');
+View::render('home/register_form', [
+    'registration_open'           => $registration_open,
+    'registration_closed_message' => $registration_closed_message
+]);
 
 View::render('layouts/footer');

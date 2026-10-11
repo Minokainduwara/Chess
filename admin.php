@@ -60,6 +60,15 @@ if ($is_authenticated && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
+    // AJAX: Instant Toggle Registration Status (Open / Close)
+    if (isset($_POST['action']) && $_POST['action'] === 'toggle_registration_status') {
+        header('Content-Type: application/json; charset=utf-8');
+        $new_open = ($_POST['open'] === '1' || $_POST['open'] === 'true') ? '1' : '0';
+        TournamentService::updateSetting('registration_open', $new_open);
+        echo json_encode(['success' => true, 'open' => $new_open === '1']);
+        exit;
+    }
+
     // AJAX: Approve / Reject Team
     if (isset($_POST['action']) && in_array($_POST['action'], ['approve_team', 'reject_team'], true)) {
         header('Content-Type: application/json; charset=utf-8');
@@ -106,6 +115,12 @@ if ($is_authenticated && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (!empty($_POST['countdown_target'])) {
             TournamentService::updateSetting('countdown_target', str_replace('T', ' ', $_POST['countdown_target']) . ':00');
+        }
+        if (isset($_POST['registration_open'])) {
+            TournamentService::updateSetting('registration_open', $_POST['registration_open'] === '1' ? '1' : '0');
+        }
+        if (isset($_POST['registration_closed_message'])) {
+            TournamentService::updateSetting('registration_closed_message', trim($_POST['registration_closed_message']));
         }
 
         if (isset($_POST['scores']) && is_array($_POST['scores'])) {
@@ -337,6 +352,8 @@ if ($is_authenticated) {
     $scoreboard_status  = $settings['scoreboard_status'] ?? 'Standings updated live after each round';
     $countdown_enabled  = ($settings['countdown_enabled'] ?? '1') === '1';
     $countdown_target   = $settings['countdown_target'] ?? '2026-10-10 07:00:00';
+    $registration_open  = ($settings['registration_open'] ?? '1') === '1';
+    $registration_closed_message = $settings['registration_closed_message'] ?? 'Official team registration for FOT Knights Arena is now closed.';
 
     $standings_teams = TournamentService::getStandings();
 
@@ -570,11 +587,13 @@ if ($is_authenticated) {
 
             <!-- 1. Scoreboard & Standings Manager -->
             <?php View::render('admin/scoreboard', [
-                'scoreboard_visible' => $scoreboard_visible,
-                'scoreboard_status'  => $scoreboard_status,
-                'countdown_enabled'  => $countdown_enabled,
-                'countdown_target'   => $countdown_target,
-                'standings_teams'    => $standings_teams
+                'scoreboard_visible'          => $scoreboard_visible,
+                'scoreboard_status'           => $scoreboard_status,
+                'countdown_enabled'           => $countdown_enabled,
+                'countdown_target'            => $countdown_target,
+                'registration_open'           => $registration_open,
+                'registration_closed_message' => $registration_closed_message,
+                'standings_teams'             => $standings_teams
             ]); ?>
 
             <!-- 2. Registered Teams & Rosters -->
@@ -814,6 +833,86 @@ if ($is_authenticated) {
         });
     }
 
+    function toggleRegistrationStatus(forcedVal) {
+        var hiddenInput = document.getElementById('registration_open_input');
+        if (!hiddenInput) return;
+        var currentVal = hiddenInput.value === '1';
+        var targetVal = (typeof forcedVal === 'boolean') ? forcedVal : !currentVal;
+
+        var btn = document.getElementById('instantRegToggleBtn');
+        var btnText = document.getElementById('instantRegToggleBtnText');
+        var btnIcon = document.getElementById('instantRegToggleBtnIcon');
+        var toggleBox = document.getElementById('registration_toggle_switch');
+        var badge = document.getElementById('regLiveBadge');
+        var feedback = document.getElementById('regInstantFeedback');
+
+        if (btn) btn.disabled = true;
+        if (toggleBox) toggleBox.disabled = true;
+
+        if (feedback) {
+            feedback.style.display = 'inline-flex';
+            feedback.className = 'instant-feedback-toast';
+            feedback.style.background = '#EDE6D2';
+            feedback.style.color = 'var(--ink)';
+            feedback.style.border = '1px solid var(--rule)';
+            feedback.style.opacity = '1';
+            feedback.innerHTML = '⏳ Updating registration status...';
+        }
+
+        var formData = new FormData();
+        formData.append('action', 'toggle_registration_status');
+        formData.append('open', targetVal ? '1' : '0');
+
+        fetch('admin.php', { method: 'POST', body: formData })
+        .then(function(res) { if (!res.ok) throw new Error('HTTP error ' + res.status); return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                var isOpen = !!data.open;
+                hiddenInput.value = isOpen ? '1' : '0';
+                if (toggleBox) toggleBox.checked = isOpen;
+
+                if (badge) {
+                    badge.className = isOpen ? 'badge badge-green' : 'badge';
+                    badge.style.background = isOpen ? '' : '#FFEBEE';
+                    badge.style.color = isOpen ? '' : 'var(--red)';
+                    badge.style.borderColor = isOpen ? '' : '#EF9A9A';
+                    badge.textContent = isOpen ? '● REGISTRATION OPEN' : '🔒 REGISTRATION CLOSED';
+                }
+                if (btn) {
+                    btn.className = 'btn-toggle-scoreboard ' + (isOpen ? 'btn-toggle-hide' : 'btn-toggle-publish');
+                    if (btnIcon) btnIcon.textContent = isOpen ? '🔒' : '🔓';
+                    if (btnText) btnText.textContent = isOpen ? 'Close Registration (Stop Submissions)' : 'Re-open Registration (Accept Submissions)';
+                }
+                if (feedback) {
+                    feedback.className = 'instant-feedback-toast ' + (isOpen ? 'success-live' : 'success-hidden');
+                    feedback.style.background = '';
+                    feedback.style.border = '';
+                    feedback.innerHTML = isOpen
+                        ? '✓ <strong>Opened!</strong> Team registration is now open on the homepage.'
+                        : '🔒 <strong>Closed!</strong> Registration is now closed on the homepage.';
+                    setTimeout(function() {
+                        feedback.style.opacity = '0';
+                        setTimeout(function() { feedback.style.display = 'none'; feedback.style.opacity = '1'; }, 500);
+                    }, 3500);
+                }
+            } else {
+                alert(data.error || 'Failed to update registration status.');
+                if (feedback) feedback.style.display = 'none';
+                if (toggleBox) toggleBox.checked = currentVal;
+            }
+        })
+        .catch(function(err) {
+            console.error('Error toggling registration:', err);
+            alert('Could not update registration status. Please try again.');
+            if (feedback) feedback.style.display = 'none';
+            if (toggleBox) toggleBox.checked = currentVal;
+        })
+        .finally(function() {
+            if (btn) btn.disabled = false;
+            if (toggleBox) toggleBox.disabled = false;
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         var btn = document.getElementById('instantToggleBtn');
         var toggleBox = document.getElementById('scoreboard_toggle_switch');
@@ -831,6 +930,15 @@ if ($is_authenticated) {
         }
         if (cdBox) {
             cdBox.addEventListener('change', function() { toggleCountdownVisibility(this.checked); });
+        }
+
+        var regBtn = document.getElementById('instantRegToggleBtn');
+        var regBox = document.getElementById('registration_toggle_switch');
+        if (regBtn) {
+            regBtn.addEventListener('click', function(e) { e.preventDefault(); toggleRegistrationStatus(); });
+        }
+        if (regBox) {
+            regBox.addEventListener('change', function() { toggleRegistrationStatus(this.checked); });
         }
         
         // Maintain scroll position after form submissions/page reloads

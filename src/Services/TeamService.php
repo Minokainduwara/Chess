@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/TournamentService.php';
 
 class TeamService {
 
@@ -51,6 +52,15 @@ class TeamService {
      * Validate and register a new team with members
      */
     public static function registerTeam(array $postData): array {
+        $settings = TournamentService::getSettings();
+        if (($settings['registration_open'] ?? '1') !== '1') {
+            return [
+                'success' => false,
+                'message' => $settings['registration_closed_message'] ?? 'Official team registration is currently closed.',
+                'errors'  => ['registration' => 'Registration is currently closed by the tournament organizer.']
+            ];
+        }
+
         $pdo = Database::getConnection();
 
         $teamName        = trim($postData['team_name'] ?? '');

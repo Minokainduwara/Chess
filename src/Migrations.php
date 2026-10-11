@@ -170,7 +170,9 @@ class Migrations {
             ('scoreboard_visible', '1'),
             ('scoreboard_status', 'Standings updated live after each round'),
             ('countdown_enabled', '1'),
-            ('countdown_target', '2026-10-10 07:00:00');
+            ('countdown_target', '2026-10-10 07:00:00'),
+            ('registration_open', '1'),
+            ('registration_closed_message', 'Official team registration for FOT Knights Arena is now closed.');
         ");
 
         // Seed default admin if missing

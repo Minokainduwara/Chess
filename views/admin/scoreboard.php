@@ -121,6 +121,53 @@
             </div>
         </div>
 
+        <!-- ═══ REGISTRATION CONTROLS ═══ -->
+        <?php 
+            $registration_open = $registration_open ?? true;
+            $registration_closed_message = $registration_closed_message ?? 'Official team registration for FOT Knights Arena is now closed.';
+        ?>
+        <div class="publish-control-box" style="margin-bottom: 1.5rem; border-left: 4px solid <?= $registration_open ? '#2E7D32' : 'var(--red)' ?>;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;">
+                <div>
+                    <span style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--ink);">
+                        📝 Team Registration Status
+                    </span>
+                    <span id="regLiveBadge" class="badge <?= $registration_open ? 'badge-green' : 'badge-gold' ?>" style="margin-left: 0.4rem; vertical-align: middle; <?= !$registration_open ? 'background:#FFEBEE; color:var(--red); border-color:#EF9A9A;' : '' ?>">
+                        <?= $registration_open ? '● REGISTRATION OPEN' : '🔒 REGISTRATION CLOSED' ?>
+                    </span>
+                </div>
+                <a href="index.php#register" target="_blank" class="btn-link" style="font-size: 0.85rem;">View on Homepage ↗</a>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                <button type="button" id="instantRegToggleBtn" class="btn-toggle-scoreboard <?= $registration_open ? 'btn-toggle-hide' : 'btn-toggle-publish' ?>">
+                    <span id="instantRegToggleBtnIcon" aria-hidden="true"><?= $registration_open ? '🔒' : '🔓' ?></span>
+                    <span id="instantRegToggleBtnText"><?= $registration_open ? 'Close Registration (Stop Submissions)' : 'Re-open Registration (Accept Submissions)' ?></span>
+                </button>
+
+                <label class="switch-toggle-wrap" title="Toggle registration status instantly">
+                    <span class="switch-control">
+                        <input type="checkbox" id="registration_toggle_switch" <?= $registration_open ? 'checked' : '' ?>>
+                        <span class="switch-slider"></span>
+                    </span>
+                    <span style="font-size: 0.9rem; font-weight: 600; color: var(--ink);">Instant Switch</span>
+                </label>
+            </div>
+
+            <div id="regInstantFeedback" style="display: none;"></div>
+
+            <div style="margin-top: 0.75rem;">
+                <label class="form-label" for="registration_closed_message" style="font-size: 0.85rem;">Registration Closed Notice / Reason</label>
+                <input type="text" id="registration_closed_message" name="registration_closed_message" class="form-control"
+                       value="<?= htmlspecialchars($registration_closed_message) ?>"
+                       placeholder="e.g. Official team registration for FOT Knights Arena is now closed.">
+                <span style="font-size: 0.85rem; color: var(--ink-muted); display: block; margin-top: 0.35rem;">
+                    Displayed prominently on the homepage when registration is closed. Updated when saving standings below.
+                </span>
+            </div>
+            <input type="hidden" id="registration_open_input" name="registration_open" value="<?= $registration_open ? '1' : '0' ?>">
+        </div>
+
         <?php if (empty($standings_teams)): ?>
             <div class="alert" style="margin: 1rem 0; text-align: center;">
                 No teams have registered yet. As soon as squads register, they will appear here to enter match scores.
