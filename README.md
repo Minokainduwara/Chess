@@ -2,6 +2,8 @@
 
 Official digital tournament management platform for the **Faculty of Technology, University of Ruhuna** Chess Tournament.
 
+**Developed by Minoka Wickramasinghe and Damika Sulakshana**
+
 Built with high-performance vanilla PHP, MySQL, and modern CSS/JavaScript following a clean **Service-Oriented / MVC Architecture**.
 
 ---
@@ -15,6 +17,8 @@ Built with high-performance vanilla PHP, MySQL, and modern CSS/JavaScript follow
 - [Default Credentials](#-default-credentials)
 - [Portals & User Flows](#-portals--user-flows)
 - [Database Schema](#-database-schema)
+- [Development Team & Authors](#-development-team--authors)
+- [License](#-license)
 
 ---
 
@@ -58,6 +62,7 @@ Built with high-performance vanilla PHP, MySQL, and modern CSS/JavaScript follow
   - **Automated Recalculation**: Finalizing a match calculates team Game Points & Match Points and updates the tournament standings immediately.
 - **Printable Lineups**: Print official 4-board active match rosters.
 - **Arbiters & Officials Management**: Register, update, reorder, and remove multi-arbiter panels (Chief Arbiter, Deputy Chief Arbiter, Sector Arbiters, FIDE titles, and contacts).
+- **Dynamic Match Point (MP) System Customizer**: Configure custom tournament scoring rules in real-time (points for win, draw, loss, and whitewash/penalty toggle), immediately updating the scoring engine across the tournament.
 - **Excel/CSV Export**: One-click download of all teams and player rosters.
 - **Admin Password Management**: Dedicated interface to safely change administrator credentials with current password verification.
 - **Interactive Admin Tutorial & Handbook (`admin_tutorial.php`)**: Comprehensive on-site manual with step-by-step guidance for tournament arbiters and organizers.
@@ -207,15 +212,25 @@ http://localhost/knights/fot_arena/Chess/
 
 ## 🗄️ Database Schema
 
-The database consists of 8 interconnected tables:
+The database consists of 9 interconnected tables:
 - `teams`: Team name, contact information, captain password hash, approval status, and aggregate statistics (P, W, D, L, GP, MP, SB).
 - `members`: Registered players, board order (1–6), registration number (`TG/YYYY/NNNN`), gender, batch year, and captain flag.
 - `admins`: Administrator usernames and hashed passwords.
-- `tournament_settings`: Key-value storage for scoreboard visibility, status text, countdown target, and timer state.
+- `tournament_settings`: Key-value storage for scoreboard visibility, registration status, scoring rules (`mp_win`, `mp_draw`, etc.), countdown target, and timer state.
 - `rounds`: Round numbers, labels, drop board deadlines, schedule date/time, and open/closed status.
 - `drop_boards`: Submitted drop board member IDs per team per round.
 - `matches`: Scheduled pairings between Team A and Team B, match status, and aggregate points.
 - `match_boards`: Individual board 1–4 player assignments and game results (`1-0`, `0.5-0.5`, `0-1`).
+- `arbiters`: Appointed tournament arbiters and officials, FIDE title, FIDE ID, role designation, contact info, and display sort order.
+
+---
+
+## 👥 Development Team & Authors
+
+This tournament system was developed with dedication for the **Chess Society, Faculty of Technology, University of Ruhuna**:
+
+- **Minoka Wickramasinghe** — Lead Developer & Architect
+- **Damika Sulakshana** — Co-Developer & System Engineer
 
 ---
 

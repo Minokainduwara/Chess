@@ -18,6 +18,9 @@
                 </a>
                 <div class="footer-colophon" style="margin-top: 1.25rem;">
                     © 2026 Faculty of Technology, University of Ruhuna · <a href="captain.php" style="color: var(--ink-light); text-decoration: underline;" class="gtouch-hover">Captain Portal</a> · <a href="admin.php" style="color: var(--ink-light); text-decoration: underline;" class="gtouch-hover">Admin Portal</a>
+                    <div style="font-size: 0.78rem; color: #888; margin-top: 5px;">
+                        Developed by <strong>Minoka Wickramasinghe</strong> &amp; <strong>Damika Sulakshana</strong>
+                    </div>
                 </div>
             </div>
         </div>
